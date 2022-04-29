@@ -17,37 +17,61 @@ import 'package:archive/archive_io.dart';
 import 'dart:convert';
 
 
-
+enum StateInfo{
+  canDownload, canUpdate, canRun,
+  waiting, downloading, installing, uninstalling
+}
 
 class Launcher {
 
   String root='';
-  String downloadPath='';
-  String extractDir='';
-  String gameDir='';
-  String? _getMacExecutablePath() => _findMacExecutable(extractDir);
-  String? _getWindowsExecutablePath() => _findWindowsExecutable(extractDir); //TODO CHECK INITIALIZATION
-  Future<bool> downloadZipExists() => new File(downloadPath).exists();
+  String getArchivePath() => root + "/download.zip";
+  Future<bool> archiveExists() => new File(getArchivePath()).exists();
+  String getExtractDir() => root + "/game";
+  String getGameDir() => getExtractDir() + "";
 
-  //TODO keep this link in the cloud and fetch link depending on version number.
-  String getDownloadLink() =>
-      'https://onedrive.live.com/download?cid=3F5E79BDE61E7EA5&resid=3F5E79BDE61E7EA5%2128381&authkey=ALH_V94FQ3PnTjY';
+  String? macExecutablePath = null;
+  String? windowsExecutablePath = null;
+  bool canRun() =>
+      (Platform.isMacOS && macExecutablePath != null) ||
+      (Platform.isWindows && windowsExecutablePath != null);
 
-  String appVersionPath='';
-  String launcherVersionPath='';
+
+  Version? currentVersion = null;
+  Version? remoteVersion = null;
+  bool canUpgrade() => remoteVersion != null && (currentVersion == null || currentVersion! < remoteVersion!);
+
+  String getAppVersionPath() => root + "/.appVersion";
+  String getLauncherVersionPath() => root + "/.launcherVersion";
+
+  StateInfo currentState = StateInfo.waiting;
 
   Launcher._(){}
 
+  Future<StateInfo> _getState() async {
+    if(/*hasNoData*/) return StateInfo.canDownload;
+    else if(canUpgrade()) return StateInfo.canUpdate;
+    else if(await canRun()) return StateInfo.canRun;
+
+  }
+
   static Future<Launcher> create() async {
     var l = new Launcher._();
+
+    //paths
     l.root = (await getApplicationSupportDirectory()).path;
-    l.appVersionPath = l.root + "/appVersion.data";
-    l.launcherVersionPath = l.root + "/launcherVersion.data";
-    l.downloadPath = l.root + "/download.zip";
-    l.extractDir = l.root + "/game";
-    Directory(l.extractDir).createSync();
-    var f = new File(l.appVersionPath);
+
+    Directory(l.getExtractDir()).createSync();
+    l.macExecutablePath = await l._findMacExecutable(l.getExtractDir());
+    l.macExecutablePath = await l._findMacExecutable(l.getExtractDir());
+    //version control
+    var f = new File(l.getAppVersionPath());
     if(!f.existsSync()) f.createSync();
+
+    l.currentVersion = await l.getLocalAppVersion();
+    l.remoteVersion = await l.getRemoteAppVersion();
+    l.currentState = await l._getState();
+
 
     return l;
   }
@@ -61,7 +85,6 @@ class Launcher {
 
 
   //#region Run
-
 
   /// Runs the executable, figures out operating system.
   Future runApp() async {
@@ -119,9 +142,17 @@ class Launcher {
   }
   //#endregion
 
+  //region upgrade
 
+  Future _upgradeAppVersion(Version newVersion, Function()) async {
+    await uninstall();
+  }
+
+  //endregion
+
+  //#region install
   Future install() async {
-    await _unzip(downloadPath, extractDir);
+    await _unzip(getArchivePath, getExtractDir);
     //TODO remove zip file
   }
 
@@ -143,17 +174,40 @@ class Launcher {
         }
       }
     }
+    await _removeArchive();
     return;
+  }
+  //#endregion install
+
+  //region uninstall
+
+  Future uninstall() async {
+    await _removeArchive();
+    await _removeGameDir();
+  }
+
+  Future _removeGameDir() async {
+    if(new Directory(getGameDir).existsSync())
+      new Directory(getGameDir).deleteSync(recursive: true);
+  }
+
+  Future _removeArchive() async {
+    if(await archiveExists())
+      new File(getArchivePath).deleteSync();
   }
 
 
+  //endregion
 
-  Future download(void Function(ProgressInfo) callback) async {
-    return _downloadFile(getDownloadLink(), downloadPath, callback);
+  //#region download
+  Future download(void Function(DownloadInfo) callback) async {
+    if(currentVersion != null){
+      return _downloadFile(currentVersion!.getUrl(), getArchivePath, callback);
+    }
   }
 
   Future _downloadFile(String uri, String savePath,
-      void Function(ProgressInfo) callback) async {
+      void Function(DownloadInfo) callback) async {
     print("DOWNLOADING");
 
 
@@ -177,7 +231,7 @@ class Launcher {
         //print(
         //    'received: ${rcv.toStringAsFixed(0)} out of total: ${total.toStringAsFixed(0)}');
         calcProgress(rcv, total);
-        callback(new ProgressInfo(
+        callback(new DownloadInfo(
             progress.toStringAsFixed(1), speed.toStringAsFixed(1) + " MB/s",
             secondsLeft.toStringAsFixed(0))); //.toStringAsFixed(0);
       },
@@ -185,6 +239,7 @@ class Launcher {
     );
     return;
   }
+  //#endregion download
 
   //#region version control
 
@@ -205,13 +260,13 @@ class Launcher {
   }
 
   Future<Version?> getLocalAppVersion() async {
-    var lines = new File(appVersionPath).readAsLinesSync();
+    var lines = new File(getAppVersionPath).readAsLinesSync();
     if(lines.length != 2) return null;
     return Version.parse(lines[0], lines[1]);
   }
 
   Future setLocalAppVersion(Version v) async {
-    new File(appVersionPath).writeAsString(v.getNbr() + "\n" + v._url);
+    new File(getAppVersionPath).writeAsString(v.getNbr() + "\n" + v._url);
   }
 
 
@@ -225,8 +280,8 @@ class Launcher {
 
 //#region data classes
 
-class ProgressInfo{
-  ProgressInfo(this.progress, this.speed, this.timeLeft);
+class DownloadInfo{
+  DownloadInfo(this.progress, this.speed, this.timeLeft);
   String progress;
   String speed;
   String timeLeft;

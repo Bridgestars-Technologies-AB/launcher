@@ -24,11 +24,6 @@ void main() async {
     //}).catchError(onError =);
 
   }
-  var l = await Launcher.create();
-  print(await l.getLocalAppVersion());
-  var v = await l.getRemoteAppVersion();
-  print(v);
-  await l.setLocalAppVersion(v);
 
   runApp(LauncherApp());
 }
@@ -44,7 +39,7 @@ class LauncherApp extends StatelessWidget {
       //   primarySwatch: Colors.blue,
       //   visualDensity: VisualDensity.adaptivePlatformDensity,
       // ),
-      home: HomePage(title: 'File Download With Progress'),
+      home: HomePage(title: 'Bridgestars Launcher'),
     );
   }
 }
@@ -72,7 +67,7 @@ class _HomePageState extends State<HomePage> {
     message = s;
   });
 
-  void setProgress(ProgressInfo p) => setState(() {
+  void setProgress(DownloadInfo p) => setState(() {
     progress = '${p.progress}%  ${p.speed}  ${p.timeLeft}';
   });
   // downloading logic is handled by this method
@@ -91,7 +86,7 @@ class _HomePageState extends State<HomePage> {
     //TODO Check version
 
     if(!await l.executableExists()){
-      if(!await l.downloadZipExists()){
+      if(!await l.archiveExists()){
         await l.download((progress) => {
           setProgress(progress)
         });
