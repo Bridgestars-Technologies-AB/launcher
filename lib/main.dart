@@ -24,6 +24,12 @@ void main() async {
     //}).catchError(onError =);
 
   }
+  var l = await Launcher.create();
+  print(await l.getLocalAppVersion());
+  var v = await l.getRemoteAppVersion();
+  print(v);
+  await l.setLocalAppVersion(v);
+
   runApp(LauncherApp());
 }
 

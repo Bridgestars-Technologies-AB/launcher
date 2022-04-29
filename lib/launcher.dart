@@ -3,6 +3,7 @@
 
 
 
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:desktop_window/desktop_window.dart';
@@ -13,7 +14,7 @@ import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive_io.dart';
-
+import 'dart:convert';
 
 
 
@@ -32,17 +33,22 @@ class Launcher {
   String getDownloadLink() =>
       'https://onedrive.live.com/download?cid=3F5E79BDE61E7EA5&resid=3F5E79BDE61E7EA5%2128381&authkey=ALH_V94FQ3PnTjY';
 
-  String version='';
+  String appVersionPath='';
+  String launcherVersionPath='';
 
   Launcher._(){}
 
   static Future<Launcher> create() async {
     var l = new Launcher._();
     l.root = (await getApplicationSupportDirectory()).path;
-    l.version = l.root + "version.prop";
+    l.appVersionPath = l.root + "/appVersion.data";
+    l.launcherVersionPath = l.root + "/launcherVersion.data";
     l.downloadPath = l.root + "/download.zip";
     l.extractDir = l.root + "/game";
     Directory(l.extractDir).createSync();
+    var f = new File(l.appVersionPath);
+    if(!f.existsSync()) f.createSync();
+
     return l;
   }
 
@@ -140,21 +146,7 @@ class Launcher {
     return;
   }
 
-  //#region version control
 
-  // Future<Version> GetLocalVersion() async {
-  //
-  // }
-  //
-  // Future SetLocalVersion(Version v) async {
-  //
-  // }
-  //
-  // Future<Version> GetServerVersion() async {
-  //
-  //
-
-  //#endregion
 
   Future download(void Function(ProgressInfo) callback) async {
     return _downloadFile(getDownloadLink(), downloadPath, callback);
@@ -175,7 +167,7 @@ class Launcher {
     void calcProgress(int rcv, int total) {
       progress = ((rcv / total) * 100);
       speed = calcSpeed(rcv);
-      secondsLeft = (total - rcv) / speed;
+      secondsLeft = ((total - rcv) / speed)/1e6;
     }
 
     await Dio().download(
@@ -194,6 +186,38 @@ class Launcher {
     return;
   }
 
+  //#region version control
+
+
+  //
+
+  List<String> _getArrayFromFirestoreDoc(Map<String, dynamic> doc, String name){
+    var xs = doc['fields'][name]['arrayValue']['values'] as List<dynamic>;
+    return xs.map((e) => e['stringValue'].toString()).toList();
+  }
+
+  Future<Version> getRemoteAppVersion() async {
+    var res = await http.get(Uri.parse('https://firestore.googleapis.com/v1/projects/bridge-fcee8/databases/(default)/documents/versions/game-mac'));
+    var data = json.decode(res.body) as Map<String, dynamic>;
+    List<String> versionNbrs = _getArrayFromFirestoreDoc(data, 'versionNbrs');
+    List<String> urls = _getArrayFromFirestoreDoc(data, 'urls');
+    return Version.parse(versionNbrs.last, urls.last)!;
+  }
+
+  Future<Version?> getLocalAppVersion() async {
+    var lines = new File(appVersionPath).readAsLinesSync();
+    if(lines.length != 2) return null;
+    return Version.parse(lines[0], lines[1]);
+  }
+
+  Future setLocalAppVersion(Version v) async {
+    new File(appVersionPath).writeAsString(v.getNbr() + "\n" + v._url);
+  }
+
+
+
+//#endregion
+
 }
 
 
@@ -211,17 +235,21 @@ class ProgressInfo{
 bool isNumeric(String s) => int.tryParse(s) != null;
 
 class Version extends Comparable{
-  String nbr() => _nbrs.join('.');
+  String getNbr() => _nbrs.join('.');
   var _nbrs = [0,0,0];
+  var _url = '';
+  String getUrl() => _url;
+  String toString() => getNbr() + ";" + _url;
 
-  Version._(nbrs){
+  Version._(List<int> nbrs, String url){
     _nbrs = nbrs;
+    _url = url;
   }
 
-  static Version? fromString(String s){
+  static Version? parse(String s, String url){
     var split = s.split('.');
     if(split.length == 3 && split.every(isNumeric)){
-      return new Version._(split.map((e) => int.parse(e)));
+      return new Version._(split.map((e) => int.parse(e)).toList(), url);
     }
     return null;
   }
