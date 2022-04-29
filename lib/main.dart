@@ -3,15 +3,9 @@ import 'dart:io';
 import 'package:desktop_window/desktop_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:bridgestars_launcher/data/data.dart';
-import 'package:bridgestars_launcher/models/current_track_model.dart';
-import 'package:bridgestars_launcher/screens/playlist_screen.dart';
-import 'package:bridgestars_launcher/widgets/widgets.dart';
-import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
-import 'package:dio/dio.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:archive/archive_io.dart';
+
+import 'package:bridgestars_launcher/launcher.dart';
+
 
 enum Phase {
   begin,
@@ -30,142 +24,81 @@ void main() async {
     //}).catchError(onError =);
 
   }
-  runApp(
-    ChangeNotifierProvider(
-      create: (context) => CurrentTrackModel(),
-      child: MyDownloadApp(),
-    ),
-  );
+  runApp(LauncherApp());
 }
 
-class MyDownloadApp extends StatelessWidget {
+class LauncherApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'File Download',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: MyHomePage(title: 'File Download With Progress'),
+      title: 'Bridgestars LauncherAAA',
+      theme:defaultTheme,
+      // theme: ThemeData(
+      //   primarySwatch: Colors.blue,
+      //   visualDensity: VisualDensity.adaptivePlatformDensity,
+      // ),
+      home: HomePage(title: 'File Download With Progress'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, this.title="asd"}) : super(key: key);
+class HomePage extends StatefulWidget {
+  HomePage({Key? key, this.title="asd"}) : super(key: key);
 
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
 
-class _MyHomePageState extends State<MyHomePage> {
+class _HomePageState extends State<HomePage> {
 
   Phase phase = Phase.begin;
-  String progress = '0';
+  String message = '';
+  String progress = '';
 
-  String uri =
-      'https://onedrive.live.com/download?cid=3F5E79BDE61E7EA5&resid=3F5E79BDE61E7EA5%2128381&authkey=ALH_V94FQ3PnTjY';
+  void setPhase(Phase p) => setState(() {
+    phase = p;
+  });
+  void setMessage(String s) => setState(() {
+    message = s;
+  });
 
-  String filename = 'test.zip'; // file name that you desire to keep
-
-
+  void setProgress(ProgressInfo p) => setState(() {
+    progress = '${p.progress}%  ${p.speed}  ${p.timeLeft}';
+  });
   // downloading logic is handled by this method
 
-  Future downloadAndRun(uri) async {
-    String folderPath = Directory.current.path + "/app_dir";
-    String downloadPath = folderPath+"/"+filename;
-    String unzipPath = folderPath+"/game";
-    String runPath = unzipPath+"/Bridgestars For MacOSX - Alpha v1.0.2.app";
-
-    print(runPath);
-    //await run(runPath);
-    print(await new File(runPath).exists());
-    if(await new File(runPath).exists()){
-      phase = Phase.done;
-      await run(runPath);
-    }
-    else if(await new File(downloadPath).exists())
-    {
-      phase = Phase.installing;
-      await unzip(downloadPath, unzipPath);
-      phase = Phase.done;
-      await run(runPath);
-    }
-    else{
-      phase = Phase.downloading;
-      await downloadFile(uri, downloadPath);
-      phase = Phase.installing;
-      await unzip(downloadPath, unzipPath);
-      phase = Phase.done;
-      await run(runPath);
-    }
-  }
 
 
-  Future<void> downloadFile(uri, savePath) async {
-    print("DOWNLOADING");
-    setState(() {
-      phase = Phase.downloading;
+  Future downloadAndRun() async {
+    var l = await Launcher.create();
+
+    await Process.run('open', ["-a", "finder", l.root]).then((result) {
+      stdout.write(result.stdout);
+      stderr.write(result.stderr);
     });
 
-    Dio dio = Dio();
 
-    dio.download(
-      uri,
-      savePath,
-      onReceiveProgress: (rcv, total) {
-        //print(
-        //    'received: ${rcv.toStringAsFixed(0)} out of total: ${total.toStringAsFixed(0)}');
-        setState(() {
-          progress = ((rcv / total) * 100).toStringAsFixed(0);
+    //TODO Check version
+
+    if(!await l.executableExists()){
+      if(!await l.downloadZipExists()){
+        await l.download((progress) => {
+          setProgress(progress)
         });
-        if (progress == '100') {
-          setState(() {
-            phase = Phase.installing;
-          });
-        } else if (double.parse(progress) < 100) {}
-      },
-      deleteOnError: true,
-    )
-    .catchError((e) => print(e.toString()));
-  }
-
-  Future unzip(String zipPath, String unzipPath) async {
-    print("EXTRACTING");
-    // Use an InputFileStream to access the zip file without storing it in memory.
-
-      var bytes = new File(zipPath).readAsBytesSync();
-      var archive = ZipDecoder().decodeBytes(bytes);
-      for (var file in archive) {
-        var fileName = '$unzipPath/${file.name}';
-        if (file.isFile) {
-          var outFile = File(fileName);
-          if(outFile.path.contains("MacOS/Bridgestars")){
-            print('File:: ' + outFile.path);
-          }
-          //_tempImages.add(outFile.path);
-          outFile = await outFile.create(recursive: true);
-          await outFile.writeAsBytes(file.content);
-        }
       }
+      await l.install();
+    }
+    await l.runApp();
   }
 
-  Future run(String runPath) async {
-    print("RUNNING");
-    await Process.run('chmod', ["+x",runPath + "/Contents/MacOS/Bridgestars"]).then((result) {
-      stdout.write(result.stdout);
-      stderr.write(result.stderr);
-    });
-    await Process.run('open', [runPath]).then((result) {
-      stdout.write(result.stdout);
-      stderr.write(result.stderr);
-    });
-  }
+
+
+
+
 
   //gets the applicationDirectory and path for the to-be downloaded file
 
@@ -200,8 +133,9 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Text('$progress%'),
+                Text(progress),
                 Text(getPhaseDescription()),
+                Text(message, style: TextStyle(color: defaultTheme.accentColor))
               ],
             ),
           ),
@@ -209,48 +143,18 @@ class _MyHomePageState extends State<MyHomePage> {
         floatingActionButton: FloatingActionButton(
             child: Icon(Icons.play_arrow),
             onPressed: () async {
-              await downloadAndRun(uri);
+
+              try{
+                await downloadAndRun();
+              }catch(e){
+                setMessage(e.toString());
+              }
+
               //downloadFile(uri, filename);
             }),
       );
     }
   }
-
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Spotify UI',
-      debugShowCheckedModeBanner: false,
-      theme : defaultTheme,
-      home: Shell(),
-    );
-  }
-}
-
-class Shell extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                if (MediaQuery.of(context).size.width > 800) SideMenu(),
-                const Expanded(
-                  child: PlaylistScreen(playlist: lofihiphopPlaylist),
-                ),
-              ],
-            ),
-          ),
-          CurrentTrack(),
-        ],
-      ),
-    );
-  }
-}
 
 ThemeData defaultTheme = ThemeData(
   brightness: Brightness.light,
