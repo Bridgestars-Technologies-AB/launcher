@@ -17,19 +17,21 @@ import 'package:archive/archive_io.dart';
 import 'dart:convert';
 
 
-enum StateInfo{
-  canDownload, canUpdate, canRun,
-  waiting, downloading, installing, uninstalling
+enum LauncherState{
+  canDownload, canInstall, canUpdate, canRun,
+  waiting, downloading, installing, uninstalling, updating, running
 }
 
 class Launcher {
 
+  //PATHS
   String root='';
   String getArchivePath() => root + "/download.zip";
   Future<bool> archiveExists() => new File(getArchivePath()).exists();
   String getExtractDir() => root + "/game";
   String getGameDir() => getExtractDir() + "";
 
+  //EXECUTABLES
   String? macExecutablePath = null;
   String? windowsExecutablePath = null;
   bool canRun() =>
@@ -37,48 +39,111 @@ class Launcher {
       (Platform.isWindows && windowsExecutablePath != null);
 
 
-  Version? currentVersion = null;
-  Version? remoteVersion = null;
-  bool canUpgrade() => remoteVersion != null && (currentVersion == null || currentVersion! < remoteVersion!);
-
+  //VERSION CONTROL
+  Version? localAppVersion = null;
+  Version? remoteAppVersion = null;
+  bool canUpgrade() => remoteAppVersion != null && (localAppVersion == null || localAppVersion! < remoteAppVersion!);
   String getAppVersionPath() => root + "/.appVersion";
   String getLauncherVersionPath() => root + "/.launcherVersion";
 
-  StateInfo currentState = StateInfo.waiting;
 
-  Launcher._(){}
+  //STATE
+  LauncherState _currentState = LauncherState.waiting;
+  void _setState(LauncherState s){
+    _currentState = s;
+    stateListener(s, null);
+  }
+  void _setProgress(DownloadInfo p) => stateListener(_currentState, p);
+  LauncherState getState() => _currentState;
+  Function(LauncherState, DownloadInfo?) stateListener = (s,d) => {};
 
-  Future<StateInfo> _getState() async {
-    if(/*hasNoData*/) return StateInfo.canDownload;
-    else if(canUpgrade()) return StateInfo.canUpdate;
-    else if(await canRun()) return StateInfo.canRun;
-
+  //CONSTRUCTOR
+  Launcher._(Function(LauncherState, DownloadInfo?) listener){
+    this.stateListener = listener;
   }
 
-  static Future<Launcher> create() async {
-    var l = new Launcher._();
 
+
+  //async INIT
+  static Future<Launcher> create(Function(LauncherState, DownloadInfo?) listener) async {
+    var l = new Launcher._(listener);
     //paths
     l.root = (await getApplicationSupportDirectory()).path;
-
     Directory(l.getExtractDir()).createSync();
-    l.macExecutablePath = await l._findMacExecutable(l.getExtractDir());
-    l.macExecutablePath = await l._findMacExecutable(l.getExtractDir());
+    l._updateExecutablePaths();
+
     //version control
     var f = new File(l.getAppVersionPath());
     if(!f.existsSync()) f.createSync();
-
-    l.currentVersion = await l.getLocalAppVersion();
-    l.remoteVersion = await l.getRemoteAppVersion();
-    l.currentState = await l._getState();
-
+    l.localAppVersion = await l.getLocalAppVersion();
+    l.remoteAppVersion = await l.getRemoteAppVersion();
+    l.updateState();
 
     return l;
   }
 
-  Future<bool> executableExists() async {
-    if(Platform.isMacOS) return _getMacExecutablePath() != null;
-    if(Platform.isWindows) return _getWindowsExecutablePath() != null;
+  Future handleBtnPress() async {
+    switch (_currentState){
+
+      case LauncherState.canDownload:
+        _setState(LauncherState.downloading);
+        await download(_setProgress);
+        _setState(LauncherState.installing);
+        await install();
+        updateState();
+        break;
+
+      case LauncherState.canInstall:
+        _setState(LauncherState.installing);
+        await install();
+        updateState();
+        break;
+
+      case LauncherState.canUpdate:
+        _setState(LauncherState.updating);
+        await uninstall();
+        await setLocalAppVersion(remoteAppVersion!);
+        await download(_setProgress);
+        await install();
+        updateState();
+        break;
+
+      case LauncherState.canRun:
+        await runApp();
+        //TODO: Hide window
+        return LauncherState.running;
+
+      case LauncherState.waiting:
+      case LauncherState.downloading:
+      case LauncherState.installing:
+      case LauncherState.uninstalling:
+      case LauncherState.updating:
+      case LauncherState.running:
+        //Dont care
+        //maybe open alert
+        break;
+    }
+  }
+
+  Future<LauncherState> updateState() async {
+    if (canUpgrade())
+      _setState(LauncherState.canUpdate);
+    else if (await _updateExecutablePaths())
+      _setState(LauncherState.canRun);
+    else if (await archiveExists())
+      _setState(LauncherState.canInstall);
+    else
+      _setState(LauncherState.canDownload);
+    return _currentState;
+  }
+
+
+  Future<bool> _updateExecutablePaths() async {
+    if(Platform.isMacOS) macExecutablePath = await _findMacExecutable(getExtractDir());
+    if(Platform.isWindows) windowsExecutablePath = await _findWindowsExecutable(getExtractDir());
+    print(macExecutablePath);
+    return canRun();
+    if(Platform.isWindows) return windowsExecutablePath != null;
     return false;
   }
 
@@ -88,15 +153,13 @@ class Launcher {
 
   /// Runs the executable, figures out operating system.
   Future runApp() async {
-    if(await executableExists()) {
+    if(canRun()) {
       if (Platform.isMacOS) {
-        var path = _getMacExecutablePath()!;
-        _rewriteMacExecutablePermission(path);
-        _runMacExecutable(path);
+        _rewriteMacExecutablePermission(macExecutablePath!);
+        _runMacExecutable(macExecutablePath!);
       }
       else if (Platform.isWindows) {
-        var path = _getWindowsExecutablePath()!;
-        _runWindowsExecutable(path);
+        _runWindowsExecutable(windowsExecutablePath!);
       }
       else
         throw new Exception(
@@ -129,13 +192,13 @@ class Launcher {
     stderr.write(result.stderr);
   }
 
-  String? _findMacExecutable(String folderPath) {
+  Future<String?> _findMacExecutable(String folderPath) async {
     var dir = Directory(folderPath).listSync(recursive: true).toList();
     var app = dir.map((e) => e.path).firstWhere((element) => element.endsWith('.app'), orElse: () => '');
     return app.isEmpty ? null : app;
   }
 
-  String? _findWindowsExecutable(String folderPath) {
+  Future<String?> _findWindowsExecutable(String folderPath) async {
     var dir = Directory(folderPath).listSync(recursive: true).toList();
     var exe = dir.map((e) => e.path).firstWhere((e) => e == 'Bridgestars.exe', orElse: () => '');
     return exe.isEmpty ? null : exe;
@@ -152,7 +215,8 @@ class Launcher {
 
   //#region install
   Future install() async {
-    await _unzip(getArchivePath, getExtractDir);
+    await _unzip(getArchivePath(), getExtractDir());
+    await _updateExecutablePaths();
     //TODO remove zip file
   }
 
@@ -187,13 +251,13 @@ class Launcher {
   }
 
   Future _removeGameDir() async {
-    if(new Directory(getGameDir).existsSync())
-      new Directory(getGameDir).deleteSync(recursive: true);
+    if(new Directory(getGameDir()).existsSync())
+      new Directory(getGameDir()).listSync().forEach((file) => file.deleteSync(recursive: true));
   }
 
   Future _removeArchive() async {
     if(await archiveExists())
-      new File(getArchivePath).deleteSync();
+      new File(getArchivePath()).deleteSync();
   }
 
 
@@ -201,9 +265,10 @@ class Launcher {
 
   //#region download
   Future download(void Function(DownloadInfo) callback) async {
-    if(currentVersion != null){
-      return _downloadFile(currentVersion!.getUrl(), getArchivePath, callback);
+    if(localAppVersion != null){
+      return _downloadFile(localAppVersion!.getUrl(), getArchivePath(), callback);
     }
+    throw new Exception("Current version not set");
   }
 
   Future _downloadFile(String uri, String savePath,
@@ -215,13 +280,13 @@ class Launcher {
     var lastTime = new DateTime.now();
     Duration diff() => new DateTime.now().difference(lastTime);
     double calcSpeed(rcv) => (rcv - lastRcv) / (diff().inMicroseconds);
-    double progress = 0;
-    double speed = 0;
+    double percentDone = 0;
+    double speedMBs = 0;
     double secondsLeft = 0;
     void calcProgress(int rcv, int total) {
-      progress = ((rcv / total) * 100);
-      speed = calcSpeed(rcv);
-      secondsLeft = ((total - rcv) / speed)/1e6;
+      percentDone = ((rcv / total) * 100);
+      speedMBs = calcSpeed(rcv);
+      secondsLeft = ((total - rcv) / speedMBs)/1e6;
     }
 
     await Dio().download(
@@ -232,8 +297,7 @@ class Launcher {
         //    'received: ${rcv.toStringAsFixed(0)} out of total: ${total.toStringAsFixed(0)}');
         calcProgress(rcv, total);
         callback(new DownloadInfo(
-            progress.toStringAsFixed(1), speed.toStringAsFixed(1) + " MB/s",
-            secondsLeft.toStringAsFixed(0))); //.toStringAsFixed(0);
+            percentDone, speedMBs, secondsLeft)); //.toStringAsFixed(0);
       },
       deleteOnError: true,
     );
@@ -243,8 +307,6 @@ class Launcher {
 
   //#region version control
 
-
-  //
 
   List<String> _getArrayFromFirestoreDoc(Map<String, dynamic> doc, String name){
     var xs = doc['fields'][name]['arrayValue']['values'] as List<dynamic>;
@@ -260,13 +322,14 @@ class Launcher {
   }
 
   Future<Version?> getLocalAppVersion() async {
-    var lines = new File(getAppVersionPath).readAsLinesSync();
+    var lines = new File(getAppVersionPath()).readAsLinesSync();
     if(lines.length != 2) return null;
     return Version.parse(lines[0], lines[1]);
   }
 
   Future setLocalAppVersion(Version v) async {
-    new File(getAppVersionPath).writeAsString(v.getNbr() + "\n" + v._url);
+    localAppVersion = v;
+    new File(getAppVersionPath()).writeAsString(v.getNbr() + "\n" + v._url);
   }
 
 
@@ -281,10 +344,17 @@ class Launcher {
 //#region data classes
 
 class DownloadInfo{
-  DownloadInfo(this.progress, this.speed, this.timeLeft);
-  String progress;
-  String speed;
-  String timeLeft;
+  DownloadInfo(this.percentDone, this.speedMBs, this.secondsLeft);
+  double percentDone;
+  double speedMBs;
+  double secondsLeft;
+
+  @override
+  String toString() {
+    return '${percentDone.toStringAsFixed(1)}%  ${speedMBs.toStringAsFixed(1)} MB/s  ${secondsLeft.toStringAsFixed(0)} s';
+  }
+
+
 }
 
 bool isNumeric(String s) => int.tryParse(s) != null;
