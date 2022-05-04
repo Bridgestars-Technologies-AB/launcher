@@ -1,26 +1,52 @@
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:desktop_window/desktop_window.dart';
+//import 'package:desktop_window/desktop_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:bridgestars_launcher/launcher.dart';
+import 'package:dart_vlc/dart_vlc.dart';
+import 'package:window_manager/window_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await windowManager.ensureInitialized();
   if (!kIsWeb && (Platform.isMacOS || Platform.isLinux || Platform.isWindows)) {
-    await DesktopWindow.setMinWindowSize(const Size(450, 400));
+    //await DesktopWindow.setMinWindowSize(const Size(450, 400));
+    //await DesktopWindow.setWindowSize(const Size(640, 360));
+    //await DesktopWindow.setMinWindowSize(const Size(640, 360));
+    //await DesktopWindow.setMaxWindowSize(const Size(640, 360));
+
+
+    //await DesktopWindow.setMaxWindowSize(const Size(641, 361));
     //http.get(Uri.parse("https://cdn-124.anonfiles.com/L1ceW1a2y8/075596e0-1651126397/Bridgestars%20For%20MacOSX%20-%20Alpha%20v1.0.2.app.zip")).then((response) {
     //  new File("BridgestarsAlpha.zip").writeAsBytes(response.bodyBytes);
     //}).catchError(onError =);
 
   }
 
+  //await windowManager.ensureInitialized();
+  DartVLC.initialize();
+
+  WindowOptions windowOptions = WindowOptions(
+    size: Size(1920/3, 1080/3),
+    center: true,
+    backgroundColor: Colors.transparent,
+    skipTaskbar: false,
+    minimumSize: Size(1920/4, 1080/4),
+    titleBarStyle: TitleBarStyle.hidden,
+  );
+  await windowManager.setAspectRatio(16.0/9.0);
+  windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
+
   runApp(LauncherApp());
 }
 
-class LauncherApp extends StatelessWidget {
+class LauncherApp extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -46,12 +72,32 @@ class HomePage extends StatefulWidget {
 }
 
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WindowListener {
+
+  @override
+  void initState() {
+    windowManager.addListener(this);
+    super.initState();
+  }
+  @override
+  void dispose() {
+    windowManager.removeListener(this);
+    super.dispose();
+  }
+
+
   String message = 'message';
   DownloadInfo? progress;
   Launcher? launcher;
   LauncherState launcherState = LauncherState.waiting;
   String launcherStateString = getLauncherStateString(LauncherState.waiting);
+  var player = Player(id:124135);
+
+  @override
+  void onWindowClose() {
+    print("stop");
+    player.stop();
+  }
 
   void setMessage(String s) => setState(() {
     message = s;
@@ -65,14 +111,28 @@ class _HomePageState extends State<HomePage> {
 
 
   Future setup() async {
-    launcher = await Launcher.create(setLauncherState);
-    var l  = launcher!;
-    await Process.run('open', ["-a", "finder", l.root]).then((result) {
-      stdout.write(result.stdout);
-      stderr.write(result.stderr);
-    });
+    print("setup");
+    player.open(
+      Media.asset('assets/shortIntro.mov'),
+      autoStart: false, // default
+    );
+    player.play();
+    player.setVolume(0);
+    //stopVideoWhenDone();
+    //launcher = await Launcher.create(setLauncherState);
+    //var l  = launcher!;
+    //await Process.run('open', ["-a", "finder", l.root]).then((result) {
+    //  stdout.write(result.stdout);
+    //  stderr.write(result.stderr);
+    //});
     //TODO Check version
-
+  }
+  
+  void stopVideoWhenDone() async  {
+    await Future.delayed(const Duration(seconds: 3), (){});
+    //player.remove(0);
+    player.stop();
+    print("STOP");
   }
 
   Future handleBtnPress() async {
@@ -99,114 +159,126 @@ class _HomePageState extends State<HomePage> {
         //   child: Icon(Icons.now_widgets_outlined),
         //
         // ),
-        body:
-          Container(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: LinearProgressIndicator(
-                      minHeight: 5,
-                      value: 0.5,//progress != null ? progress!.percentDone/100 : 0.0,
-                      color: defaultTheme.accentColor,
-                    ),
-                  ),
-                  SizedBox(
-                    width: 400,
-                    height: 200,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Text(progress.toString()),
-                        Text(message, style: TextStyle(color: defaultTheme.accentColor))
-                      ],
+        body: Stack(
+          children: [
+             Video(
+               player: player,
+               //height: 360,
+               //width: 640,
+               scale: 1.0, // default
+               showControls: false, // default
+               playlistLength: 1,
+             ),
+            //Container(
+            //  child: Padding(
+            //    padding: const EdgeInsets.only(top: 0),
+            //    child: Column(
+            //      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //      children: <Widget>[
+            //        Padding(
+            //          padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+            //          child: LinearProgressIndicator(
+            //            minHeight: 5,
+            //            value: 0.5,//progress != null ? progress!.percentDone/100 : 0.0,
+            //            color: defaultTheme.accentColor,
+            //          ),
+            //        ),
+            //        SizedBox(
+            //          width: 400,
+            //          height: 200,
+            //          child: Column(
+            //            mainAxisAlignment: MainAxisAlignment.center,
+            //            children: <Widget>[
+            //              Text(progress.toString()),
+            //              Text(message, style: TextStyle(color: defaultTheme.accentColor))
+            //            ],
 
-                    ),
-                  ),
-                  Stack(
-                    children: [
-                      Positioned(
-                          left: 10,//-window.physicalSize.width/4,
-                          bottom: 10,
-                          child: Text(launcher!.localAppVersion!.getNbr().toString(), style: TextStyle(fontSize: 14),)
-                          // child: new Container(
-                          //   width: 100.0,
-                          //   height: 80.0,
-                          //   decoration: new BoxDecoration(color: Colors.white),
-                          //   child: new Text('hello'),
-                          // )
-                      ),
+            //          ),
+            //        ),
+            //        Stack(
+            //          children: [
+            //            Positioned(
+            //                left: 10,//-window.physicalSize.width/4,
+            //                bottom: 10,
+            //                child: Text("asd"),//launcher!.localAppVersion!.getNbr().toString(), style: TextStyle(fontSize: 14),)
+            //              // child: new Container(
+            //              //   width: 100.0,
+            //              //   height: 80.0,
+            //              //   decoration: new BoxDecoration(color: Colors.white),
+            //              //   child: new Text('hello'),
+            //              // )
+            //            ),
 
-                  Padding(
+            //            Padding(
 
-                    padding: EdgeInsets.fromLTRB(10, 0, 10, 10),
-                    child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                          Opacity(
-                            opacity: 0,
-                            child: TextButton(
-                                child: Text("Uninstall"),
-                                onPressed: () {}//launcher.handleBtnPress(),
-                            ),
-                          ),
+            //              padding: EdgeInsets.fromLTRB(10, 0, 10, 10),
+            //              child: Row(
+            //                mainAxisAlignment: MainAxisAlignment.center,
+            //                children: <Widget>[
+            //                  Opacity(
+            //                    opacity: 0,
+            //                    child: TextButton(
+            //                        child: Text("Uninstall"),
+            //                        onPressed: () {}//launcher.handleBtnPress(),
+            //                    ),
+            //                  ),
 
-                          // if(launcher != null) Positioned(
-                          //   child: Text(launcher!.localAppVersion.toString(), style: TextStyle(color: Colors.white),),
-                          //   left: 30,
-                          //   top: 30
-                          // ),
+            //                  // if(launcher != null) Positioned(
+            //                  //   child: Text(launcher!.localAppVersion.toString(), style: TextStyle(color: Colors.white),),
+            //                  //   left: 30,
+            //                  //   top: 30
+            //                  // ),
 
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          //elevation: 100
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          primary: defaultTheme.accentColor,
-                            minimumSize: Size(250, 75)
-                        ),
+            //                  ElevatedButton(
+            //                    style: ElevatedButton.styleFrom(
+            //                      //elevation: 100
+            //                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            //                        primary: defaultTheme.accentColor,
+            //                        minimumSize: Size(250, 75)
+            //                    ),
 
-                        child: Text(launcherStateString, style: TextStyle(fontSize: 24),),
-                        onPressed: () async {
-                          try{
-                            await handleBtnPress();
-                          }
-                          catch (e) {
-                            setMessage(e.toString());
-                            launcher?.updateState();
-                            throw Exception(e);
-                          }
-                        },//launcher.handleBtnPress(),
-                      ),
-                      TextButton(
+            //                    child: Text(launcherStateString, style: TextStyle(fontSize: 24),),
+            //                    onPressed: () async {
+            //                      try{
+            //                        await handleBtnPress();
+            //                      }
+            //                      catch (e) {
+            //                        setMessage(e.toString());
+            //                        launcher?.updateState();
+            //                        throw Exception(e);
+            //                      }
+            //                    },//launcher.handleBtnPress(),
+            //                  ),
+            //                  TextButton(
 
-                        child: Text("Uninstall", style: TextStyle(color: Colors.white),),
-                        onPressed: () async {
-                          try{
-                              showAlertDialog(context, "Alert", "Are you sure you want to uninstall?",[Text("Cancel"), Text("Uninstall", style: TextStyle(color: Colors.red),)], [() => {}, () async {
-                                await launcher?.uninstall();
-                                launcher?.updateState();
-                              }]);
-                          }
-                          catch (e) {
-                            setMessage(e.toString());
-                            throw Exception(e);
-                          }
-                        },//launcher.handleBtnPress(),
-                      ),
+            //                    child: Text("Uninstall", style: TextStyle(color: Colors.white),),
+            //                    onPressed: () async {
+            //                      try{
+            //                        showAlertDialog(context, "Alert", "Are you sure you want to uninstall?",[Text("Cancel"), Text("Uninstall", style: TextStyle(color: Colors.red),)], [() => {}, () async {
+            //                          await launcher?.uninstall();
+            //                          launcher?.updateState();
+            //                        }]);
+            //                      }
+            //                      catch (e) {
+            //                        setMessage(e.toString());
+            //                        throw Exception(e);
+            //                      }
+            //                    },//launcher.handleBtnPress(),
+            //                  ),
 
-                    ],
-                  ),
-                  )
-                    ],
-                  )
+            //                ],
+            //              ),
+            //            )
+            //          ],
+            //        )
 
-                ],
-              ),
-            ),
-          ),
+            //      ],
+            //    ),
+            //  ),
+            //),
+          ],
+        )
+
 
         );
 

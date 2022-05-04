@@ -12,13 +12,15 @@ dependencies:
   flutter:
     sdk: flutter
 
-  desktop_window: ^0.4.0
+  #desktop_window: ^0.4.0
+  window_manager: ^0.2.1
   provider: ^5.0.0
   http: ^0.13.4
   dio: ^4.0.6
   path_provider: ^2.0.9
   archive: ^3.3.0
   flutter_easyloading: ^3.0.3
+  dart_vlc: ^0.1.9
 
 dev_dependencies:
   flutter_test:

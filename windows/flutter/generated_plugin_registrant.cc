@@ -6,9 +6,12 @@
 
 #include "generated_plugin_registrant.h"
 
-#include <desktop_window/desktop_window_plugin.h>
+#include <dart_vlc/dart_vlc_plugin.h>
+#include <window_manager/window_manager_plugin.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
-  DesktopWindowPluginRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("DesktopWindowPlugin"));
+  DartVlcPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("DartVlcPlugin"));
+  WindowManagerPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("WindowManagerPlugin"));
 }
