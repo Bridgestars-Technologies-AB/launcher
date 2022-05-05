@@ -13,20 +13,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
   if (!kIsWeb && (Platform.isMacOS || Platform.isLinux || Platform.isWindows)) {
-    //await DesktopWindow.setMinWindowSize(const Size(450, 400));
-    //await DesktopWindow.setWindowSize(const Size(640, 360));
-    //await DesktopWindow.setMinWindowSize(const Size(640, 360));
-    //await DesktopWindow.setMaxWindowSize(const Size(640, 360));
-
-
-    //await DesktopWindow.setMaxWindowSize(const Size(641, 361));
-    //http.get(Uri.parse("https://cdn-124.anonfiles.com/L1ceW1a2y8/075596e0-1651126397/Bridgestars%20For%20MacOSX%20-%20Alpha%20v1.0.2.app.zip")).then((response) {
-    //  new File("BridgestarsAlpha.zip").writeAsBytes(response.bodyBytes);
-    //}).catchError(onError =);
 
   }
-
-  //await windowManager.ensureInitialized();
+  await windowManager.ensureInitialized();
   DartVLC.initialize();
 
   WindowOptions windowOptions = WindowOptions(
@@ -35,6 +24,7 @@ void main() async {
     backgroundColor: Colors.transparent,
     skipTaskbar: false,
     minimumSize: Size(1920/4, 1080/4),
+    maximumSize: Size(1920/2, 1080/2),
     titleBarStyle: TitleBarStyle.hidden,
   );
   await windowManager.setAspectRatio(16.0/9.0);
@@ -74,9 +64,17 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with WindowListener {
 
+  //#region events
+  @override
+  void onWindowFocus() {
+    // Make sure to call once.
+    setState(() {});
+    // do something
+  }
   @override
   void initState() {
     windowManager.addListener(this);
+    _init();
     super.initState();
   }
   @override
@@ -84,6 +82,42 @@ class _HomePageState extends State<HomePage> with WindowListener {
     windowManager.removeListener(this);
     super.dispose();
   }
+
+  @override
+  void onWindowEvent(String eventName) {
+    print('[WindowManager] onWindowEvent: $eventName');
+  }
+
+
+  @override
+  void onWindowClose() async {
+    bool _isPreventClose = await windowManager.isPreventClose();
+    if (_isPreventClose) {
+      print("STOPPING");
+      player.stop();
+      await windowManager.destroy();
+    }
+  }
+  //#endregion
+
+  void _init() async {
+    // Add this line to override the default close handler
+    await windowManager.setPreventClose(true);
+    await setup();
+    //add constructor
+  }
+
+  void setMessage(String s) => setState(() {
+    message = s;
+  });
+  void setLauncherState(LauncherState s, DownloadInfo? p) => setState(() {
+    launcherState = s;
+    launcherStateString = getLauncherStateString(s);
+    progress = p;
+  });
+
+
+
 
 
   String message = 'message';
@@ -93,27 +127,21 @@ class _HomePageState extends State<HomePage> with WindowListener {
   String launcherStateString = getLauncherStateString(LauncherState.waiting);
   var player = Player(id:124135);
 
-  @override
-  void onWindowClose() {
-    print("stop");
-    player.stop();
+
+  void showUIWhenVideoDone() async  {
+    await Future.delayed(const Duration(seconds: 3), (){});
+
   }
 
-  void setMessage(String s) => setState(() {
-    message = s;
-  });
-  void setLauncherState(LauncherState s, DownloadInfo? p) => setState(() {
-      launcherState = s;
-      launcherStateString = getLauncherStateString(s);
-      progress = p;
-    });
+
+
   // downloading logic is handled by this method
 
 
   Future setup() async {
     print("setup");
     player.open(
-      Media.asset('assets/shortIntro.mov'),
+      Media.asset('assets/shortIntro.mp4'),
       autoStart: false, // default
     );
     player.play();
@@ -128,12 +156,7 @@ class _HomePageState extends State<HomePage> with WindowListener {
     //TODO Check version
   }
   
-  void stopVideoWhenDone() async  {
-    await Future.delayed(const Duration(seconds: 3), (){});
-    //player.remove(0);
-    player.stop();
-    print("STOP");
-  }
+
 
   Future handleBtnPress() async {
     if(launcher == null) return;
