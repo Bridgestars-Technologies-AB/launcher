@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:bridgestars_launcher/launcher.dart';
 import 'package:dart_vlc/dart_vlc.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:liquid_progress_indicator/liquid_progress_indicator.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,12 +20,12 @@ void main() async {
   DartVLC.initialize();
 
   WindowOptions windowOptions = WindowOptions(
-    size: Size(1920/3, 1080/3),
+    size: Size(1620/2, 1080/2),
     center: true,
     backgroundColor: Colors.transparent,
     skipTaskbar: false,
-    minimumSize: Size(1920/4, 1080/4),
-    maximumSize: Size(1920/2, 1080/2),
+    minimumSize: Size(1620/4, 1080/4),
+    maximumSize: Size(1620/1.5, 1080/1.5),
     titleBarStyle: TitleBarStyle.hidden,
   );
   await windowManager.setAspectRatio(16.0/9.0);
@@ -94,7 +95,11 @@ class _HomePageState extends State<HomePage> with WindowListener {
     bool _isPreventClose = await windowManager.isPreventClose();
     if (_isPreventClose) {
       print("STOPPING");
-      player.stop();
+      if(showUI){
+        player.stop();
+        await playOutroBeforeHiding();
+      }
+      else player.stop();
       await windowManager.destroy();
     }
   }
@@ -125,14 +130,27 @@ class _HomePageState extends State<HomePage> with WindowListener {
   Launcher? launcher;
   LauncherState launcherState = LauncherState.waiting;
   String launcherStateString = getLauncherStateString(LauncherState.waiting);
+  bool showUI = false;
   var player = Player(id:124135);
 
 
   void showUIWhenVideoDone() async  {
-    await Future.delayed(const Duration(seconds: 3), (){});
-
+    await Future.delayed(const Duration(milliseconds: 2500), (){});
+    setState(() {
+      showUI = true;
+    });
   }
 
+  Future playOutroBeforeHiding() async {
+    setState(() {
+      showUI = false;
+    });
+    player.open(
+      Media.asset('assets/shortOutro.mov'),
+    );
+    await Future.delayed(const Duration(milliseconds: 850), (){});
+    player.stop();
+  }
 
 
   // downloading logic is handled by this method
@@ -141,11 +159,10 @@ class _HomePageState extends State<HomePage> with WindowListener {
   Future setup() async {
     print("setup");
     player.open(
-      Media.asset('assets/shortIntro.mp4'),
-      autoStart: false, // default
+      Media.asset('assets/shortIntro.mov'),
     );
-    player.play();
-    player.setVolume(0);
+    Future.delayed(const Duration(milliseconds: 2500), (){}).then((value) => player.stop());
+    showUIWhenVideoDone();
     //stopVideoWhenDone();
     //launcher = await Launcher.create(setLauncherState);
     //var l  = launcher!;
@@ -192,113 +209,113 @@ class _HomePageState extends State<HomePage> with WindowListener {
                showControls: false, // default
                playlistLength: 1,
              ),
-            //Container(
-            //  child: Padding(
-            //    padding: const EdgeInsets.only(top: 0),
-            //    child: Column(
-            //      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //      children: <Widget>[
-            //        Padding(
-            //          padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
-            //          child: LinearProgressIndicator(
-            //            minHeight: 5,
-            //            value: 0.5,//progress != null ? progress!.percentDone/100 : 0.0,
-            //            color: defaultTheme.accentColor,
-            //          ),
-            //        ),
-            //        SizedBox(
-            //          width: 400,
-            //          height: 200,
-            //          child: Column(
-            //            mainAxisAlignment: MainAxisAlignment.center,
-            //            children: <Widget>[
-            //              Text(progress.toString()),
-            //              Text(message, style: TextStyle(color: defaultTheme.accentColor))
-            //            ],
+            if (showUI) Container(
+             child: Padding(
+               padding: const EdgeInsets.only(top: 0),
+               child: Column(
+                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                 children: <Widget>[
+                   Padding(
+                     padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                     child: LinearProgressIndicator(
+                       minHeight: 5,
+                       value: 0,//progress != null ? progress!.percentDone/100 : 0.0,
+                       color: defaultTheme.accentColor,
+                     ),
+                   ),
+                   SizedBox(
+                     width: 400,
+                     height: 200,
+                     child: Column(
+                       mainAxisAlignment: MainAxisAlignment.center,
+                       children: <Widget>[
+                         Text(progress.toString()),
+                         Text(message, style: TextStyle(color: defaultTheme.accentColor))
+                       ],
 
-            //          ),
-            //        ),
-            //        Stack(
-            //          children: [
-            //            Positioned(
-            //                left: 10,//-window.physicalSize.width/4,
-            //                bottom: 10,
-            //                child: Text("asd"),//launcher!.localAppVersion!.getNbr().toString(), style: TextStyle(fontSize: 14),)
-            //              // child: new Container(
-            //              //   width: 100.0,
-            //              //   height: 80.0,
-            //              //   decoration: new BoxDecoration(color: Colors.white),
-            //              //   child: new Text('hello'),
-            //              // )
-            //            ),
+                     ),
+                   ),
+                   Stack(
+                     children: [
+                       Positioned(
+                           left: 10,//-window.physicalSize.width/4,
+                           bottom: 10,
+                           child: Text("asd"),//launcher!.localAppVersion!.getNbr().toString(), style: TextStyle(fontSize: 14),)
+                         // child: new Container(
+                         //   width: 100.0,
+                         //   height: 80.0,
+                         //   decoration: new BoxDecoration(color: Colors.white),
+                         //   child: new Text('hello'),
+                         // )
+                       ),
 
-            //            Padding(
+                       Padding(
 
-            //              padding: EdgeInsets.fromLTRB(10, 0, 10, 10),
-            //              child: Row(
-            //                mainAxisAlignment: MainAxisAlignment.center,
-            //                children: <Widget>[
-            //                  Opacity(
-            //                    opacity: 0,
-            //                    child: TextButton(
-            //                        child: Text("Uninstall"),
-            //                        onPressed: () {}//launcher.handleBtnPress(),
-            //                    ),
-            //                  ),
+                         padding: EdgeInsets.fromLTRB(10, 0, 10, 10),
+                         child: Row(
+                           mainAxisAlignment: MainAxisAlignment.center,
+                           children: <Widget>[
+                             Opacity(
+                               opacity: 0,
+                               child: TextButton(
+                                   child: Text("Uninstall"),
+                                   onPressed: () {}//launcher.handleBtnPress(),
+                               ),
+                             ),
 
-            //                  // if(launcher != null) Positioned(
-            //                  //   child: Text(launcher!.localAppVersion.toString(), style: TextStyle(color: Colors.white),),
-            //                  //   left: 30,
-            //                  //   top: 30
-            //                  // ),
+                             // if(launcher != null) Positioned(
+                             //   child: Text(launcher!.localAppVersion.toString(), style: TextStyle(color: Colors.white),),
+                             //   left: 30,
+                             //   top: 30
+                             // ),
 
-            //                  ElevatedButton(
-            //                    style: ElevatedButton.styleFrom(
-            //                      //elevation: 100
-            //                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            //                        primary: defaultTheme.accentColor,
-            //                        minimumSize: Size(250, 75)
-            //                    ),
+                             ElevatedButton(
+                               style: ElevatedButton.styleFrom(
+                                 //elevation: 100
+                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                   primary: defaultTheme.accentColor,
+                                   minimumSize: Size(250, 75)
+                               ),
 
-            //                    child: Text(launcherStateString, style: TextStyle(fontSize: 24),),
-            //                    onPressed: () async {
-            //                      try{
-            //                        await handleBtnPress();
-            //                      }
-            //                      catch (e) {
-            //                        setMessage(e.toString());
-            //                        launcher?.updateState();
-            //                        throw Exception(e);
-            //                      }
-            //                    },//launcher.handleBtnPress(),
-            //                  ),
-            //                  TextButton(
+                               child: Text(launcherStateString, style: TextStyle(fontSize: 24),),
+                               onPressed: () async {
+                                 try{
+                                   await handleBtnPress();
+                                 }
+                                 catch (e) {
+                                   setMessage(e.toString());
+                                   launcher?.updateState();
+                                   throw Exception(e);
+                                 }
+                               },//launcher.handleBtnPress(),
+                             ),
+                             TextButton(
 
-            //                    child: Text("Uninstall", style: TextStyle(color: Colors.white),),
-            //                    onPressed: () async {
-            //                      try{
-            //                        showAlertDialog(context, "Alert", "Are you sure you want to uninstall?",[Text("Cancel"), Text("Uninstall", style: TextStyle(color: Colors.red),)], [() => {}, () async {
-            //                          await launcher?.uninstall();
-            //                          launcher?.updateState();
-            //                        }]);
-            //                      }
-            //                      catch (e) {
-            //                        setMessage(e.toString());
-            //                        throw Exception(e);
-            //                      }
-            //                    },//launcher.handleBtnPress(),
-            //                  ),
+                               child: Text("Uninstall", style: TextStyle(color: Colors.white),),
+                               onPressed: () async {
+                                 try{
+                                   showAlertDialog(context, "Alert", "Are you sure you want to uninstall?",[Text("Cancel"), Text("Uninstall", style: TextStyle(color: Colors.red),)], [() => {}, () async {
+                                     await launcher?.uninstall();
+                                     launcher?.updateState();
+                                   }]);
+                                 }
+                                 catch (e) {
+                                   setMessage(e.toString());
+                                   throw Exception(e);
+                                 }
+                               },//launcher.handleBtnPress(),
+                             ),
 
-            //                ],
-            //              ),
-            //            )
-            //          ],
-            //        )
+                           ],
+                         ),
+                       )
+                     ],
+                   )
 
-            //      ],
-            //    ),
-            //  ),
-            //),
+                 ],
+               ),
+             ),
+            ),
           ],
         )
 
