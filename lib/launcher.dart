@@ -1,8 +1,4 @@
-
-
-
-
-
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -14,65 +10,82 @@ import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive_io.dart';
 import 'dart:convert';
 
-
-enum LauncherState{
-  canDownload, canInstall, canUpdate, canRun,
-  waiting, downloading, installing, uninstalling, updating, running
+enum LauncherState {
+  canDownload,
+  canInstall,
+  canUpdate,
+  canRun,
+  waiting,
+  downloading,
+  installing,
+  uninstalling,
+  updating,
+  running,
+  connecting
 }
 
 class Launcher {
-
   //PATHS
-  String root='';
+  String root = '';
+
   String getArchivePath() => root + "/download.zip";
+
   Future<bool> archiveExists() => new File(getArchivePath()).exists();
+
   String getExtractDir() => root + "/game";
+
   String getGameDir() => getExtractDir() + "";
 
   //EXECUTABLES
   String? macExecutablePath = null;
   String? windowsExecutablePath = null;
+
   bool canRun() =>
       (Platform.isMacOS && macExecutablePath != null) ||
       (Platform.isWindows && windowsExecutablePath != null);
 
-
   //VERSION CONTROL
   Version? localAppVersion = null;
   Version? remoteAppVersion = null;
-  bool canUpgrade() => remoteAppVersion != null && (localAppVersion == null || localAppVersion! < remoteAppVersion!);
-  String getAppVersionPath() => root + "/.appVersion";
-  String getLauncherVersionPath() => root + "/.launcherVersion";
 
+  bool canUpgrade() =>
+      remoteAppVersion != null &&
+      (localAppVersion == null || localAppVersion! < remoteAppVersion!);
+
+  String getAppVersionPath() => root + "/.appVersion";
+
+  String getLauncherVersionPath() => root + "/.launcherVersion";
 
   //STATE
   LauncherState _currentState = LauncherState.waiting;
-  void _setState(LauncherState s){
+
+  void _setState(LauncherState s) {
     _currentState = s;
     stateListener(s, null);
   }
+
   void _setProgress(DownloadInfo p) => stateListener(_currentState, p);
+
   LauncherState getState() => _currentState;
-  Function(LauncherState, DownloadInfo?) stateListener = (s,d) => {};
+  Function(LauncherState, DownloadInfo?) stateListener = (s, d) => {};
 
   //CONSTRUCTOR
-  Launcher._(Function(LauncherState, DownloadInfo?) listener){
+  Launcher._(Function(LauncherState, DownloadInfo?) listener) {
     this.stateListener = listener;
   }
 
-
-
   //async INIT
-  static Future<Launcher> create(Function(LauncherState, DownloadInfo?) listener) async {
+  static Future<Launcher> create(
+      Function(LauncherState, DownloadInfo?) listener) async {
     var l = new Launcher._(listener);
     //paths
     l.root = (await getApplicationSupportDirectory()).path;
     Directory(l.getExtractDir()).createSync();
-    l._updateExecutablePaths();
+    l.updateExecutablePaths();
 
     //version control
     var f = new File(l.getAppVersionPath());
-    if(!f.existsSync()) f.createSync();
+    if (!f.existsSync()) f.createSync();
     l.localAppVersion = await l.getLocalAppVersion();
     l.remoteAppVersion = await l.getRemoteAppVersion();
     l.updateState();
@@ -81,8 +94,7 @@ class Launcher {
   }
 
   Future handleBtnPress() async {
-    switch (_currentState){
-
+    switch (_currentState) {
       case LauncherState.canDownload:
         _setState(LauncherState.downloading);
         await download(_setProgress);
@@ -117,6 +129,7 @@ class Launcher {
       case LauncherState.uninstalling:
       case LauncherState.updating:
       case LauncherState.running:
+      case LauncherState.connecting:
         //Dont care
         //maybe open alert
         break;
@@ -126,7 +139,7 @@ class Launcher {
   Future<LauncherState> updateState() async {
     if (canUpgrade())
       _setState(LauncherState.canUpdate);
-    else if (await _updateExecutablePaths())
+    else if (await updateExecutablePaths())
       _setState(LauncherState.canRun);
     else if (await archiveExists())
       _setState(LauncherState.canInstall);
@@ -135,47 +148,45 @@ class Launcher {
     return _currentState;
   }
 
-
-  Future<bool> _updateExecutablePaths() async {
-    if(Platform.isMacOS) macExecutablePath = await _findMacExecutable(getExtractDir());
-    if(Platform.isWindows) windowsExecutablePath = await _findWindowsExecutable(getExtractDir());
+  Future<bool> updateExecutablePaths() async {
+    if (Platform.isMacOS)
+      macExecutablePath = await _findMacExecutable(getExtractDir());
+    if (Platform.isWindows)
+      windowsExecutablePath = await _findWindowsExecutable(getExtractDir());
     print(macExecutablePath);
     return canRun();
-    if(Platform.isWindows) return windowsExecutablePath != null;
+    if (Platform.isWindows) return windowsExecutablePath != null;
     return false;
   }
-
-
 
   //#region Run
 
   /// Runs the executable, figures out operating system.
   Future runApp() async {
-    if(canRun()) {
+    if (canRun()) {
       if (Platform.isMacOS) {
         _rewriteMacExecutablePermission(macExecutablePath!);
         _runMacExecutable(macExecutablePath!);
-      }
-      else if (Platform.isWindows) {
+      } else if (Platform.isWindows) {
         _runWindowsExecutable(windowsExecutablePath!);
-      }
-      else
+      } else
         throw new Exception(
             "Platform not supported: " + Platform.operatingSystem);
-    }
-    else throw new Exception("Executable not found");
+    } else
+      throw new Exception("Executable not found");
   }
 
   ///TODO not sure this works
   void _runWindowsExecutable(String path) {
-    var result = Process.runSync('cmd', ['start',path]);
+    var result = Process.runSync('cmd', ['start', path]);
     stdout.write(result.stdout);
     stderr.write(result.stderr);
   }
 
   void _rewriteMacExecutablePermission(String path) {
     //Write permission to execute app
-    var innerExecutable =  Directory(path+"/Contents/MacOS").listSync().first.path;
+    var innerExecutable =
+        Directory(path + "/Contents/MacOS").listSync().first.path;
     var result = Process.runSync('chmod', ["+x", innerExecutable]);
     stdout.write(result.stdout);
     stderr.write(result.stderr);
@@ -192,15 +203,20 @@ class Launcher {
 
   Future<String?> _findMacExecutable(String folderPath) async {
     var dir = Directory(folderPath).listSync(recursive: true).toList();
-    var app = dir.map((e) => e.path).firstWhere((element) => element.endsWith('.app'), orElse: () => '');
+    var app = dir
+        .map((e) => e.path)
+        .firstWhere((element) => element.endsWith('.app'), orElse: () => '');
     return app.isEmpty ? null : app;
   }
 
   Future<String?> _findWindowsExecutable(String folderPath) async {
     var dir = Directory(folderPath).listSync(recursive: true).toList();
-    var exe = dir.map((e) => e.path).firstWhere((e) => e == 'Bridgestars.exe', orElse: () => '');
+    var exe = dir
+        .map((e) => e.path)
+        .firstWhere((e) => e == 'Bridgestars.exe', orElse: () => '');
     return exe.isEmpty ? null : exe;
   }
+
   //#endregion
 
   //region upgrade
@@ -209,12 +225,12 @@ class Launcher {
     await uninstall();
   }
 
-  //endregion
+//endregion
 
-  //#region install
+//#region install
   Future install() async {
     await _unzip(getArchivePath(), getExtractDir());
-    await _updateExecutablePaths();
+    await updateExecutablePaths();
     //TODO remove zip file
   }
 
@@ -230,7 +246,7 @@ class Launcher {
       if (file.isFile) {
         var outFile = File(fileName);
         //_tempImages.add(outFile.path);
-        if(!fileName.contains('__MACOSX')) {
+        if (!fileName.contains('__MACOSX')) {
           outFile = await outFile.create(recursive: true);
           await outFile.writeAsBytes(file.content);
         }
@@ -239,9 +255,9 @@ class Launcher {
     await _removeArchive();
     return;
   }
-  //#endregion install
+//#endregion install
 
-  //region uninstall
+//region uninstall
 
   Future uninstall() async {
     await _removeArchive();
@@ -249,30 +265,30 @@ class Launcher {
   }
 
   Future _removeGameDir() async {
-    if(new Directory(getGameDir()).existsSync())
-      new Directory(getGameDir()).listSync().forEach((file) => file.deleteSync(recursive: true));
+    if (new Directory(getGameDir()).existsSync())
+      new Directory(getGameDir())
+          .listSync()
+          .forEach((file) => file.deleteSync(recursive: true));
   }
 
   Future _removeArchive() async {
-    if(await archiveExists())
-      new File(getArchivePath()).deleteSync();
+    if (await archiveExists()) new File(getArchivePath()).deleteSync();
   }
 
+//endregion
 
-  //endregion
-
-  //#region download
+//#region download
   Future download(void Function(DownloadInfo) callback) async {
-    if(localAppVersion != null){
-      return _downloadFile(localAppVersion!.getUrl(), getArchivePath(), callback);
+    if (localAppVersion != null) {
+      return _downloadFile(
+          localAppVersion!.getUrl(), getArchivePath(), callback);
     }
     throw new Exception("Current version not set");
   }
 
-  Future _downloadFile(String uri, String savePath,
-      void Function(DownloadInfo) callback) async {
+  Future _downloadFile(
+      String uri, String savePath, void Function(DownloadInfo) callback) async {
     print("DOWNLOADING");
-
 
     int lastRcv = 0;
     var lastTime = new DateTime.now();
@@ -284,7 +300,7 @@ class Launcher {
     void calcProgress(int rcv, int total) {
       percentDone = ((rcv / total) * 100);
       speedMBs = calcSpeed(rcv);
-      secondsLeft = ((total - rcv) / speedMBs)/1e6;
+      secondsLeft = ((total - rcv) / speedMBs) / 1e6;
     }
 
     await Dio().download(
@@ -301,48 +317,91 @@ class Launcher {
     );
     return;
   }
-  //#endregion download
+//#endregion download
 
-  //#region version control
+//#region version control
 
-
-  List<String> _getArrayFromFirestoreDoc(Map<String, dynamic> doc, String name){
-    var xs = doc['fields'][name]['arrayValue']['values'] as List<dynamic>;
-    return xs.map((e) => e['stringValue'].toString()).toList();
+  Version? _getLatestVersionFromFirestoreDoc(Map<String, dynamic> doc) {
+    var xs = doc['fields']['versions']['arrayValue']['values'] as List<dynamic>;
+    var versions = xs.map((e) {
+      var fields = e['mapValue']['fields'];
+      var url = fields['url']['stringValue'];
+      var info = fields['info']['stringValue'];
+      var nbr = fields['nbr']['stringValue'];
+      return Version.parse(nbr, url, info);
+    });
+    Version? current =
+        localAppVersion != null ? localAppVersion : versions.first;
+    versions.forEach((v) =>
+        {if (current == null || (v != null && v > current!)) current = v});
+    return current;
   }
 
   Future<Version> getRemoteAppVersion() async {
-    var res = await http.get(Uri.parse('https://firestore.googleapis.com/v1/projects/bridge-fcee8/databases/(default)/documents/versions/game-mac'));
-    var data = json.decode(res.body) as Map<String, dynamic>;
-    List<String> versionNbrs = _getArrayFromFirestoreDoc(data, 'versionNbrs');
-    List<String> urls = _getArrayFromFirestoreDoc(data, 'urls');
-    return Version.parse(versionNbrs.last, urls.last)!;
+    var s = _currentState;
+    _setState(LauncherState.connecting);
+    Version? v;
+    Map<String, dynamic> data;
+    try{
+      var res = await http.get(Uri.parse(
+          'https://firestore.googleapis.com/v1/projects/bridge-fcee8/databases/(default)/documents/versions/game-mac'));
+      data = json.decode(res.body) as Map<String, dynamic>;
+    }
+    catch(e) {
+      throw new Exception("Could not connect, please check your internet connection",);
+    }
+    try {
+      v = _getLatestVersionFromFirestoreDoc(data);
+      if (v != null) {
+        _setState(s);
+        print(v);
+        return v;
+      }
+      throw new Exception();
+    }
+    catch(e){
+      throw new Exception("Could not parse remote app version");
+    }
   }
 
   Future<Version?> getLocalAppVersion() async {
     var lines = new File(getAppVersionPath()).readAsLinesSync();
-    if(lines.length != 2) return null;
-    return Version.parse(lines[0], lines[1]);
+    if (lines.length != 3) return null;
+    return Version.parse(lines[0], lines[1], lines[2]);
   }
 
   Future setLocalAppVersion(Version v) async {
     localAppVersion = v;
-    new File(getAppVersionPath()).writeAsString(v.getNbr() + "\n" + v._url);
+    new File(getAppVersionPath())
+        .writeAsString(v.getNbr() + "\n" + v.getUrl() + "\n" + v.getInfo());
   }
-
-
 
 //#endregion
 
+
+
+  Future waitForGameClose() async {
+    if(Platform.isMacOS) {
+      var r = Process.runSync('ps', ['-e']);
+      print(r.stderr.toString());
+
+      if(!r.stdout.toString().contains(getGameDir())) {
+        print("GAME IS NOT RUNNING ANYMORE: Opening");
+        return;
+      }
+    }
+    else if (Platform.isWindows){} //TODO
+    print("GAME IS RUNNING");
+    await Future.delayed(Duration(milliseconds: 500)).then((e) => waitForGameClose());
+  }
+
 }
-
-
-
 
 //#region data classes
 
-class DownloadInfo{
+class DownloadInfo {
   DownloadInfo(this.percentDone, this.speedMBs, this.secondsLeft);
+
   double percentDone;
   double speedMBs;
   double secondsLeft;
@@ -351,43 +410,51 @@ class DownloadInfo{
   String toString() {
     return '${percentDone.toStringAsFixed(1)}%  ${speedMBs.toStringAsFixed(1)} MB/s  ${secondsLeft.toStringAsFixed(0)} s';
   }
-
-
 }
 
 bool isNumeric(String s) => int.tryParse(s) != null;
 
-class Version extends Comparable{
-  String getNbr() => _nbrs.join('.');
-  var _nbrs = [0,0,0];
+class Version extends Comparable {
+  var _nbrs = [0, 0, 0];
   var _url = '';
-  String getUrl() => _url;
-  String toString() => getNbr() + ";" + _url;
+  var _info = "";
 
-  Version._(List<int> nbrs, String url){
+  String getNbr() => _nbrs.join('.');
+
+  String getUrl() => _url;
+
+  String getInfo() => _info;
+
+  String toString() => "Version(" + getNbr() + ", " + _url + ", " + _info + ")";
+
+  Version._(List<int> nbrs, String url, String info) {
     _nbrs = nbrs;
     _url = url;
+    _info = info;
   }
 
-  static Version? parse(String s, String url){
+  static Version? parse(String s, String url, String info) {
     var split = s.split('.');
-    if(split.length == 3 && split.every(isNumeric)){
-      return new Version._(split.map((e) => int.parse(e)).toList(), url);
+    if (split.length == 3 && split.every(isNumeric)) {
+      return new Version._(split.map((e) => int.parse(e)).toList(), url, info);
     }
     return null;
   }
 
   bool operator >(Version other) => compareTo(other) == 1;
-  bool operator <(Version other) => compareTo(other) == -1;
-  @override
-  bool operator ==(Object other) => other.runtimeType == Version && compareTo(other) == 0;
 
+  bool operator <(Version other) => compareTo(other) == -1;
+
+  @override
+  bool operator ==(Object other) =>
+      other.runtimeType == Version && compareTo(other) == 0;
 
   @override
   int compareTo(other) {
-    for(var i = 0; i < 3; i++){
-      if(_nbrs[i] > other._nbrs[i]) return 1;
-      else if(_nbrs[i] < other._nbrs[i]) return -1;
+    for (var i = 0; i < 3; i++) {
+      if (_nbrs[i] > other._nbrs[i])
+        return 1;
+      else if (_nbrs[i] < other._nbrs[i]) return -1;
     }
     return 0;
   }

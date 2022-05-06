@@ -17,6 +17,10 @@ import 'package:window_manager/window_manager.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 
 import 'launcherView.dart';
+import 'videoView.dart';
+
+late final navigatorKey = GlobalKey<NavigatorState>();
+GlobalKey<VideoViewState> videoKey = GlobalKey();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,7 +45,12 @@ void main() async {
     await windowManager.focus();
   });
 
-  runApp(LauncherApp());
+  runApp(MaterialApp(
+    navigatorKey: navigatorKey,
+    debugShowCheckedModeBanner: false,
+    home:LauncherApp()
+  ));
+
 }
 
 class LauncherApp extends StatefulWidget {
@@ -53,6 +62,7 @@ class LauncherApp extends StatefulWidget {
 
 class _LauncherState extends State<LauncherApp> {
   bool showUI = false;
+  bool hide = true;
 
   @override
   Widget build(BuildContext context) {
@@ -68,59 +78,17 @@ class _LauncherState extends State<LauncherApp> {
           body: Stack(
             children: [
               VideoView(
+                 key: videoKey,
                   onShowUIChanged: (b) => setState(() {
                         print("SHOW UI ");
                         print(b);
                         showUI = b;
                       })),
-              LauncherView(showUI: showUI)
+              LauncherView(showUI: showUI, videoViewKey: videoKey)
             ],
           ),
         ));
   }
-}
-
-showAlertDialog(BuildContext context, String title, String message,
-    List<Text> btnTexts, List<Function()> btnActions) {
-  if (btnTexts.length != btnActions.length)
-    throw new ArgumentError("nbr of actions must be equal to nbr of btn texts");
-
-  var btns = btnActions.asMap().entries.map((e) => TextButton(
-      onPressed: () {
-        Navigator.of(context).pop(); //pop dialog
-        e.value(); //run btnAction
-      },
-      child: btnTexts.elementAt(e.key)));
-
-// set up the AlertDialog
-  AlertDialog alert = AlertDialog(
-    title: Text(title),
-    content: Text(message),
-    actions: btns.toList(),
-  );
-
-// show the dialog
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return alert;
-    },
-  );
-}
-
-PopupMenuItem _buildPopupMenuItem(String title,
-    {IconData iconData = Icons.print}) {
-  return PopupMenuItem(
-    child: Row(
-      children: [
-        Icon(
-          iconData,
-          color: Colors.black,
-        ),
-        Text(title),
-      ],
-    ),
-  );
 }
 
 ThemeData defaultTheme = ThemeData(

@@ -2,17 +2,21 @@ import 'package:dart_vlc/dart_vlc.dart';
 import 'package:flutter/material.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 import 'package:window_manager/window_manager.dart';
+import 'dart:io';
 
 class VideoView extends StatefulWidget {
   final Function(bool) onShowUIChanged;
+  bool _triggerHideSequence = false;
 
-  VideoView({Key? key, required this.onShowUIChanged}) : super(key: key){}
+  VideoView({Key? key, required this.onShowUIChanged, bool triggerHideSequence=false}) : super(key: key){
+    _triggerHideSequence = triggerHideSequence;
+  }
 
   @override
-  _HomePageState createState() => _HomePageState();
+  VideoViewState createState() => VideoViewState();
 }
 
-class _HomePageState extends State<VideoView> with WindowListener {
+class VideoViewState extends State<VideoView> with WindowListener {
   //#region events
   @override
   void onWindowFocus() {
@@ -46,9 +50,9 @@ class _HomePageState extends State<VideoView> with WindowListener {
       print("STOPPING");
       if (showUI) {
         player.stop();
-        await playOutroBeforeHiding();
-      } else
-        player.stop();
+        await playOutroAndHide();
+      }
+      player.stop();
       await windowManager.destroy();
     }
   }
@@ -78,14 +82,32 @@ class _HomePageState extends State<VideoView> with WindowListener {
     setShowUI(true);
   }
 
-  Future playOutroBeforeHiding() async {
+  Future playOutroAndHide() async {
     setShowUI(false);
     player.open(
       Media.asset('assets/shortOutro.mov'),
     );
     await Future.delayed(const Duration(milliseconds: 850), () {});
-    player.stop();
+    //player.stop();
+    await windowManager.hide();
+    await windowManager.setSkipTaskbar(true);
+
   }
+
+  Future showWithBackground() async {
+    await windowManager.show();
+    await windowManager.focus();
+    await windowManager.setSkipTaskbar(false);
+    player.open(
+      Media.asset('assets/shortIntro.mov'),
+    );
+    player.play();
+    //player.seek(Duration(seconds: 4));
+    setShowUI(true);
+    //TODO show background
+  }
+
+
 
   // downloading logic is handled by this method
 
