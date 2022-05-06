@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 
 //import 'package:desktop_window/desktop_window.dart';
+import 'package:bridgestars_launcher/videoView.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,8 @@ import 'package:window_manager/window_manager.dart';
 //import 'package:liquid_progress_indicator/liquid_progress_indicator.dart';
 //import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:loading_indicator/loading_indicator.dart';
+
+import 'launcherView.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +35,7 @@ void main() async {
     maximumSize: Size(1620 / 1.5, 1080 / 1.5),
     titleBarStyle: TitleBarStyle.hidden,
   );
-  await windowManager.setAspectRatio(16.0 / 9.0);
+  await windowManager.setAspectRatio(3.0 / 2.0);
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
@@ -41,229 +44,39 @@ void main() async {
   runApp(LauncherApp());
 }
 
-class LauncherApp extends StatelessWidget {
+class LauncherApp extends StatefulWidget {
+  const LauncherApp({Key? key}) : super(key: key);
+
+  @override
+  _LauncherState createState() => _LauncherState();
+}
+
+class _LauncherState extends State<LauncherApp> {
+  bool showUI = false;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Bridgestars LauncherAAA',
-      theme: defaultTheme,
-      // theme: ThemeData(
-      //   primarySwatch: Colors.blue,
-      //   visualDensity: VisualDensity.adaptivePlatformDensity,
-      // ),
-      home: HomePage(title: 'Bridgestars Launcher'),
-    );
-  }
-}
-
-class HomePage extends StatefulWidget {
-  HomePage({Key? key, this.title = "asd"}) : super(key: key);
-
-  final String title;
-
-  @override
-  _HomePageState createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> with WindowListener {
-  //#region events
-  @override
-  void onWindowFocus() {
-    // Make sure to call once.
-    setState(() {});
-    // do something
-  }
-
-  @override
-  void initState() {
-    windowManager.addListener(this);
-    _init();
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    windowManager.removeListener(this);
-    super.dispose();
-  }
-
-  @override
-  void onWindowEvent(String eventName) {
-    print('[WindowManager] onWindowEvent: $eventName');
-  }
-
-  @override
-  void onWindowClose() async {
-    bool _isPreventClose = await windowManager.isPreventClose();
-    if (_isPreventClose) {
-      print("STOPPING");
-      if (showUI) {
-        player.stop();
-        await playOutroBeforeHiding();
-      } else
-        player.stop();
-      await windowManager.destroy();
-    }
-  }
-
-  //#endregion
-
-  void _init() async {
-    // Add this line to override the default close handler
-    await windowManager.setPreventClose(true);
-    await setup();
-    //add constructor
-  }
-
-  void setMessage(String s) => setState(() {
-        message = s;
-      });
-
-  void setLauncherState(LauncherState s, DownloadInfo? p) => setState(() {
-        launcherState = s;
-        launcherStateString = getLauncherStateString(s);
-        progress = p;
-      });
-
-  String message = 'message';
-  DownloadInfo? progress;
-  Launcher? launcher;
-  LauncherState launcherState = LauncherState.waiting;
-  String launcherStateString = getLauncherStateString(LauncherState.waiting);
-  bool showUI = false;
-  bool showLoader = true;
-  var player = Player(id: 124135);
-
-  void showUIWhenVideoDone() async {
-    await Future.delayed(const Duration(milliseconds: 2500), () {});
-    setState(() {
-      showUI = true;
-    });
-  }
-
-  Future playOutroBeforeHiding() async {
-    setState(() {
-      showUI = false;
-    });
-    player.open(
-      Media.asset('assets/shortOutro.mov'),
-    );
-    await Future.delayed(const Duration(milliseconds: 850), () {});
-    player.stop();
-  }
-
-  // downloading logic is handled by this method
-
-  Future setup() async {
-    print("setup");
-    player.open(
-      Media.asset('assets/shortIntro.mov'),
-    );
-    Future.delayed(const Duration(milliseconds: 2500), () {})
-        .then((value) => player.stop());
-    showUIWhenVideoDone();
-    //stopVideoWhenDone();
-    //launcher = await Launcher.create(setLauncherState);
-    //var l  = launcher!;
-    //await Process.run('open', ["-a", "finder", l.root]).then((result) {
-    //  stdout.write(result.stdout);
-    //  stderr.write(result.stderr);
-    //});
-    //TODO Check version
-  }
-
-  Future handleBtnPress() async {
-    if (launcher == null) return;
-    await launcher!.handleBtnPress();
-  }
-
-  _HomePageState() {
-    setup();
-  }
-
-  //gets the applicationDirectory and path for the to-be downloaded file
-
-  // which will be used to save the file to that path in the downloadFile method
-
-  @override
-  Widget build(BuildContext context) {
-    var width = MediaQuery.of(context)
-        .size
-        .width; // * MediaQuery.of(context).devicePixelRatio;
-    var height = MediaQuery.of(context)
-        .size
-        .height; // * MediaQuery.of(context).devicePixelRatio;
-
-    return Scaffold(
-        // floatingActionButton: FloatingActionButton(
-        //   onPressed: () {  },
-        //   backgroundColor: defaultTheme.scaffoldBackgroundColor,
-        //   child: Icon(Icons.now_widgets_outlined),
-        //
+        debugShowCheckedModeBanner: false,
+        title: 'Bridgestars LauncherAAA',
+        theme: defaultTheme,
+        // theme: ThemeData(
+        //   primarySwatch: Colors.blue,
+        //   visualDensity: VisualDensity.adaptivePlatformDensity,
         // ),
-        body: Stack(
-      children: [
-        Video(
-          player: player,
-          //height: 360,
-          //width: 640,
-          scale: 1.0, // default
-          showControls: false, // default
-          playlistLength: 1,
-        ),
-        if (showUI)
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Container(height: height*0.5),
-              if (showLoader) Container(
-                width: width/20,
-                height: width/20,
-                alignment: Alignment.center,
-                child: LoadingIndicator(
-                  indicatorType: Indicator.ballRotateChase,
-
-                  /// Required, The loading type of the widget
-                  colors: const [Colors.white],
-
-                  /// Optional, The color collections
-
-                  //strokeWidth: 2, /// Optional, The stroke of the line, only applicable to widget which contains line
-                  //backgroundColor: Colors.black,      /// Optional, Background of the widget
-                  //pathBackgroundColor: Colors.black
-                ),
-              ),
-              Padding(padding: EdgeInsets.only(top: height/50)
-                  ,child: Text(launcherStateString, style: TextStyle(fontSize: width/60)))
-            ])
-          ])
-      ],
-    ));
-  }
-}
-
-String getLauncherStateString(LauncherState s) {
-  switch (s) {
-    case LauncherState.canDownload:
-      return "Download";
-    case LauncherState.canInstall:
-      return "Install";
-    case LauncherState.canUpdate:
-      return "Update";
-    case LauncherState.canRun:
-      return "Start";
-    case LauncherState.waiting:
-      return "Waiting";
-    case LauncherState.downloading:
-      return "Downloading";
-    case LauncherState.installing:
-      return "Installing";
-    case LauncherState.uninstalling:
-      return "Uninstalling";
-    case LauncherState.updating:
-      return "Updating";
-    case LauncherState.running:
-      return "Running";
+        home: Scaffold(
+          body: Stack(
+            children: [
+              VideoView(
+                  onShowUIChanged: (b) => setState(() {
+                        print("SHOW UI ");
+                        print(b);
+                        showUI = b;
+                      })),
+              LauncherView(showUI: showUI)
+            ],
+          ),
+        ));
   }
 }
 
