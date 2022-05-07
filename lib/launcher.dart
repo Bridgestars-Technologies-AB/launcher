@@ -20,6 +20,7 @@ enum LauncherState {
   installing,
   uninstalling,
   updating,
+  preparingUpdate,
   running,
   connecting
 }
@@ -96,6 +97,8 @@ class Launcher {
   Future handleBtnPress() async {
     switch (_currentState) {
       case LauncherState.canDownload:
+
+        await setLocalAppVersion(remoteAppVersion!);
         _setState(LauncherState.downloading);
         await download(_setProgress);
         _setState(LauncherState.installing);
@@ -110,9 +113,10 @@ class Launcher {
         break;
 
       case LauncherState.canUpdate:
-        _setState(LauncherState.updating);
+        _setState(LauncherState.preparingUpdate);
         await uninstall();
         await setLocalAppVersion(remoteAppVersion!);
+        _setState(LauncherState.updating);
         await download(_setProgress);
         await install();
         updateState();
@@ -130,6 +134,7 @@ class Launcher {
       case LauncherState.updating:
       case LauncherState.running:
       case LauncherState.connecting:
+      case LauncherState.preparingUpdate:
         //Dont care
         //maybe open alert
         break;
@@ -137,7 +142,7 @@ class Launcher {
   }
 
   Future<LauncherState> updateState() async {
-    if (canUpgrade())
+    if (canUpgrade() && localAppVersion != null)
       _setState(LauncherState.canUpdate);
     else if (await updateExecutablePaths())
       _setState(LauncherState.canRun);
@@ -372,7 +377,7 @@ class Launcher {
 
   Future setLocalAppVersion(Version v) async {
     localAppVersion = v;
-    new File(getAppVersionPath())
+    await File(getAppVersionPath())
         .writeAsString(v.getNbr() + "\n" + v.getUrl() + "\n" + v.getInfo());
   }
 
@@ -426,6 +431,12 @@ class Version extends Comparable {
   String getInfo() => _info;
 
   String toString() => "Version(" + getNbr() + ", " + _url + ", " + _info + ")";
+  String getDisplayValue(){
+    var a = "Alpha ";
+    if(_nbrs[0] != 0) a = "Release ";
+    else if(_nbrs[1] != 0) a = "Beta ";
+    return a + getNbr();
+  }
 
   Version._(List<int> nbrs, String url, String info) {
     _nbrs = nbrs;

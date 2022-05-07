@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 
 import 'launcher.dart';
 import 'main.dart';
@@ -28,7 +29,7 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
   DownloadInfo? progress;
   Launcher? launcher;
   LauncherState launcherState = LauncherState.waiting;
-  String launcherStateString = getLauncherStateString(LauncherState.waiting);
+  String launcherStateString = getLauncherStateString(LauncherState.waiting, null);
   bool showBtn = false;
 
   @override
@@ -45,7 +46,8 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
       //TODO REMOVE
       await Process.run('open', ['-a', 'finder', launcher!.getGameDir()]);
     } catch (e) {
-      OpenErrorModal(e.toString(), ["Try again"], [_init]);
+      await showErrorRetryDialog(widget: widget, message: getExceptionMessage(e));
+      _init();
     }
   }
 
@@ -55,8 +57,10 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
         var a = await launcher?.updateExecutablePaths();
         if (a == false) {
           launcher?.updateState();
-          OpenErrorModal("It seems like your game files are corrupted",
-              ["Download missing files"], [_handleBtnPress]);
+          await showCustomDialog(
+              message: "It seems like your game files are corrupted",
+              widget: widget, positiveButtonTitle: "Download missing files");
+          _handleBtnPress();
           return;
         } else {
           await widget.videoViewKey.currentState?.playOutroAndHide();
@@ -68,11 +72,16 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
       } else
         launcher?.handleBtnPress();
     } catch (e) {
-      OpenErrorModal(e.toString(), ["Try again"], [_handleBtnPress]);
+      await showErrorRetryDialog(
+          message: getExceptionMessage(e), widget: widget);
+      _handleBtnPress();
     }
   }
 
-  void OpenErrorModal(String message, List<String> btnTexts,
+  String getExceptionMessage(e) =>
+      e.toString().substring(e.toString().indexOf(':') + 1);
+
+/*  void OpenErrorModal(String message, List<String> btnTexts,
       List<Function()> btnActions) async {
     if (widget.showUI) {
       var m = message.substring(message.indexOf(':') + 1);
@@ -82,11 +91,12 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
     } else
       Future.delayed(Duration(milliseconds: 50))
           .then((v) => OpenErrorModal(message, btnTexts, btnActions));
-  }
+  }*/
 
-  void setLauncherState(LauncherState s, DownloadInfo? p) => setState(() {
+  void setLauncherState(LauncherState s, DownloadInfo? p) =>
+      setState(() {
         launcherState = s;
-        launcherStateString = getLauncherStateString(s);
+        launcherStateString = getLauncherStateString(s, launcher);
         progress = p;
         showBtn = [
           LauncherState.canRun,
@@ -98,10 +108,12 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
-    var width = MediaQuery.of(context)
+    var width = MediaQuery
+        .of(context)
         .size
         .width; // * MediaQuery.of(context).devicePixelRatio;
-    var height = MediaQuery.of(context)
+    var height = MediaQuery
+        .of(context)
         .size
         .height; // * MediaQuery.of(context).devicePixelRatio;
     return Stack(children: [
@@ -110,7 +122,7 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
             padding: EdgeInsets.all(width / 100),
             child: Align(
               child: Text(
-                launcher!.localAppVersion!.getNbr(),
+                launcher!.localAppVersion!.getDisplayValue(),
                 style: TextStyle(color: Colors.white60, fontSize: width / 80),
               ),
               alignment: Alignment.bottomLeft,
@@ -119,89 +131,100 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           showBtn
               ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(height: height * 0.5),
-                    Container(
-                        constraints: BoxConstraints(
-                            minHeight: height / 12,
-                            maxHeight: height / 12,
-                            minWidth: width / 7),
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            shape: StadiumBorder(
-                                //borderRadius: BorderRadius.circular(height/30),
-                                side: BorderSide(color: Colors.red)),
-                            primary: Color.fromARGB(255, 255, 100, 100),
-                            //shadowColor: Color.fromARGB(255, 255, 255, 255)),
-                          ),
-                          onPressed: _handleBtnPress,
-                          child: Text(launcherStateString,
-                              style: TextStyle(
-                                  fontSize: width / 35, color: Colors.white)),
-                        )),
-                    //
-                  ],
-                )
-              : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Container(height: height * 0.5),
-                  Container(
-                    width: width / 20,
-                    height: width / 20,
-                    alignment: Alignment.center,
-                    child: LoadingIndicator(
-                      indicatorType: Indicator.ballRotateChase,
-                      colors: const [Colors.white70],
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(height: height * 0.5),
+              Container(
+                  constraints: BoxConstraints(
+                      minHeight: height / 12,
+                      maxHeight: height / 12,
+                      minWidth: width / 7),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shape: StadiumBorder(
+                        //borderRadius: BorderRadius.circular(height/30),
+                          side: BorderSide(color: Colors.red)),
+                      primary: Color.fromARGB(255, 255, 100, 100),
+                      //shadowColor: Color.fromARGB(255, 255, 255, 255)),
                     ),
-                  ),
-                  Container(height: height / 30),
-                  Text(launcherStateString,
-                      style: TextStyle(
-                          fontSize: width / 60, color: Colors.white70)),
-                  Container(height: height / 30),
-                  if (launcherState == LauncherState.downloading &&
-                      progress != null)
-                    SizedBox(
-                        width: width / 4,
-                        child: Row(
-                            //return '${percentDone.toStringAsFixed(1)}%  ${speedMBs.toStringAsFixed(1)} MB/s  ${secondsLeft.toStringAsFixed(0)} s';
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                  progress!.percentDone.toStringAsFixed(1) +
-                                      "%",
-                                  style: TextStyle(
-                                      fontSize: width / 60,
-                                      fontFeatures: [
-                                        FontFeature.tabularFigures()
-                                      ],
-                                      color: Colors.white70)),
-                              Text(
-                                  progress!.speedMBs.toStringAsFixed(1) +
-                                      " MB/s",
-                                  style: TextStyle(
-                                      fontSize: width / 60,
-                                      fontFeatures: [
-                                        FontFeature.tabularFigures()
-                                      ],
-                                      color: Colors.white70)),
-                              Text(
-                                  progress!.secondsLeft.toStringAsFixed(0) +
-                                      " s",
-                                  style: TextStyle(
-                                      fontSize: width / 60,
-                                      fontFeatures: [
-                                        FontFeature.tabularFigures()
-                                      ],
-                                      color: Colors.white70)),
-                            ])) //progress
-                ])
+                    onPressed: _handleBtnPress,
+                    child: Text(launcherStateString,
+                        style: TextStyle(
+                            fontSize: width / 35, color: Colors.white)),
+                  )),
+              Container(height: height / 40),
+              TextButton(
+                  onPressed: () async {
+                      var m = launcher?.localAppVersion?.getInfo() ?? "www.bridgestars.se";
+                      await showOKDialog(widget: widget, message: m, title: "General Information");
+                  },
+                  child: Text(launcherState == LauncherState.canUpdate ? "Update Notes" : "Read more",
+                    style: TextStyle(decoration: TextDecoration.underline, color: Colors.white70))
+              )
+              //
+            ],
+          )
+              : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Container(height: height * 0.5),
+            Container(
+              width: width / 20,
+              height: width / 20,
+              alignment: Alignment.center,
+              child: LoadingIndicator(
+                indicatorType: Indicator.ballRotateChase,
+                colors: const [Colors.white70],
+              ),
+            ),
+            Container(height: height / 30),
+            Text(launcherStateString,
+                style: TextStyle(
+                    fontSize: width / 60, color: Colors.white70)),
+            Container(height: height / 30),
+            if ((launcherState == LauncherState.downloading || launcherState == LauncherState.updating) &&
+                progress != null)
+              SizedBox(
+                  width: width / 4,
+                  child: Row(
+                    //return '${percentDone.toStringAsFixed(1)}%  ${speedMBs.toStringAsFixed(1)} MB/s  ${secondsLeft.toStringAsFixed(0)} s';
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                            progress!.percentDone.toStringAsFixed(1) +
+                                "%",
+                            style: TextStyle(
+                                fontSize: width / 60,
+                                fontFeatures: [
+                                  FontFeature.tabularFigures()
+                                ],
+                                color: Colors.white70)),
+                        Text(
+                            progress!.speedMBs.toStringAsFixed(1) +
+                                " MB/s",
+                            style: TextStyle(
+                                fontSize: width / 60,
+                                fontFeatures: [
+                                  FontFeature.tabularFigures()
+                                ],
+                                color: Colors.white70)),
+                        Text(
+                            progress!.secondsLeft.toStringAsFixed(0) +
+                                " s",
+                            style: TextStyle(
+                                fontSize: width / 60,
+                                fontFeatures: [
+                                  FontFeature.tabularFigures()
+                                ],
+                                color: Colors.white70)),
+                      ])) //progress
+          ])
         ])
     ]);
   }
 }
 
-String getLauncherStateString(LauncherState s) {
+String getLauncherStateString(LauncherState s, Launcher? launcher) {
+  String v = launcher?.localAppVersion?.getDisplayValue() ?? "";
+  String nbr = launcher?.localAppVersion?.getNbr() ?? "";
   switch (s) {
     case LauncherState.canDownload:
       return "DOWNLOAD";
@@ -214,48 +237,104 @@ String getLauncherStateString(LauncherState s) {
     case LauncherState.waiting:
       return "Waiting";
     case LauncherState.downloading:
-      return "Downloading";
+      return "Downloading " + v;
     case LauncherState.installing:
       return "Installing";
     case LauncherState.uninstalling:
       return "Uninstalling";
     case LauncherState.updating:
-      return "Updating";
+      return "Downloading version " + nbr;
     case LauncherState.running:
       return "Running";
     case LauncherState.connecting:
       return "Connecting";
-      break;
+    case LauncherState.preparingUpdate:
+      return "Preparing update";
   }
 }
 
-showAlertDialog(String title, String message, List<Text> btnTexts,
-    List<Function()> btnActions) {
-  if (btnTexts.length != btnActions.length)
-    throw new ArgumentError("nbr of actions must be equal to nbr of btn texts");
+
+Future showOKDialog(
+    {required LauncherView widget, required String message, required String title}) async {
+  if (widget.showUI) {
+    return await FlutterPlatformAlert.showAlert(
+        alertStyle: AlertButtonStyle.ok,
+        windowTitle: title,
+        text: message,
+        iconStyle: IconStyle.information);
+  } else
+    return Future.delayed(Duration(milliseconds: 50))
+        .then((v) =>
+        showOKDialog(message: message, title: title, widget: widget));
+}
+
+Future showErrorRetryDialog(
+    {required LauncherView widget, required String message, String title = "Ops, Something went wrong"}) async {
+  if (widget.showUI) {
+    return await FlutterPlatformAlert.showCustomAlert(
+        positiveButtonTitle: "Try again",
+        windowTitle: title,
+        text: message,
+        iconStyle: IconStyle.error);
+  } else
+    return Future.delayed(Duration(milliseconds: 50))
+        .then((v) =>
+        showOKDialog(message: message, title: title, widget: widget));
+}
+
+Future showCustomDialog(
+    {required LauncherView widget, required String message, String title = "Ops, Something went wrong", String positiveButtonTitle = "",
+      String neutralButtonTitle = "",
+      String negativeButtonTitle = "", IconStyle iconStyle = IconStyle.information}) async {
+  if (widget.showUI) {
+    return await FlutterPlatformAlert.showCustomAlert(
+        positiveButtonTitle: positiveButtonTitle,
+        neutralButtonTitle: neutralButtonTitle,
+        negativeButtonTitle: negativeButtonTitle,
+        windowTitle: title,
+        text: message,
+        iconStyle: iconStyle);
+  } else
+    return Future.delayed(Duration(milliseconds: 50))
+        .then((v) =>
+        showOKDialog(message: message, title: title, widget: widget));
+}
+
+showAlertDialog
+(
+
+String title, String
+message,
+
+List<Text> btnTexts,
+    List
+<
+Function()> btnActions) {
+if (btnTexts.length != btnActions.length)
+throw new ArgumentError("nbr of actions must be equal to nbr of btn texts");
 
 // set up the AlertDialog
 
 // show the dialog
-  if (navigatorKey.currentContext == null)
-    throw new Exception("Something not set up right");
-  showDialog(
-    context: navigatorKey.currentContext!,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: btnActions
-            .asMap()
-            .entries
-            .map((e) => TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); //pop dialog
-                  e.value(); //run btnAction
-                },
-                child: btnTexts.elementAt(e.key)))
-            .toList(),
-      );
-    },
-  );
+if (navigatorKey.currentContext == null)
+throw new Exception("Something not set up right");
+showDialog(
+context: navigatorKey.currentContext!,
+builder: (BuildContext context) {
+return AlertDialog(
+title: Text(title),
+content: Text(message),
+actions: btnActions
+    .asMap()
+    .entries
+    .map((e) => TextButton(
+onPressed: () {
+Navigator.of(context).pop(); //pop dialog
+e.value(); //run btnAction
+},
+child: btnTexts.elementAt(e.key)))
+    .toList(),
+);
+},
+);
 }
