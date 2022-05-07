@@ -37,7 +37,7 @@ void main() async {
     skipTaskbar: false,
     minimumSize: Size(1620 / 4, 1080 / 4),
     maximumSize: Size(1620 / 1.5, 1080 / 1.5),
-    titleBarStyle: TitleBarStyle.hidden,
+    titleBarStyle: TitleBarStyle.normal,
   );
   await windowManager.setAspectRatio(3.0 / 2.0);
   windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -46,11 +46,9 @@ void main() async {
   });
 
   runApp(MaterialApp(
-    navigatorKey: navigatorKey,
-    debugShowCheckedModeBanner: false,
-    home:LauncherApp()
-  ));
-
+      navigatorKey: navigatorKey,
+      debugShowCheckedModeBanner: false,
+      home: LauncherApp()));
 }
 
 class LauncherApp extends StatefulWidget {
@@ -78,7 +76,7 @@ class _LauncherState extends State<LauncherApp> {
           body: Stack(
             children: [
               VideoView(
-                 key: videoKey,
+                  key: videoKey,
                   onShowUIChanged: (b) => setState(() {
                         print("SHOW UI ");
                         print(b);

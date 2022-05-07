@@ -28,12 +28,13 @@ enum LauncherState {
 class Launcher {
   //PATHS
   String root = '';
+  String _slash = Platform.isWindows ? "\\" : "/";
 
-  String getArchivePath() => root + "/download.zip";
+  String getArchivePath() => root + _slash + "download.zip";
 
   Future<bool> archiveExists() => new File(getArchivePath()).exists();
 
-  String getExtractDir() => root + "/game";
+  String getExtractDir() => root + _slash + "game";
 
   String getGameDir() => getExtractDir() + "";
 
@@ -53,9 +54,9 @@ class Launcher {
       remoteAppVersion != null &&
       (localAppVersion == null || localAppVersion! < remoteAppVersion!);
 
-  String getAppVersionPath() => root + "/.appVersion";
+  String getAppVersionPath() => root + _slash + ".appVersion";
 
-  String getLauncherVersionPath() => root + "/.launcherVersion";
+  String getLauncherVersionPath() => root + _slash + ".launcherVersion";
 
   //STATE
   LauncherState _currentState = LauncherState.waiting;
@@ -97,7 +98,6 @@ class Launcher {
   Future handleBtnPress() async {
     switch (_currentState) {
       case LauncherState.canDownload:
-
         await setLocalAppVersion(remoteAppVersion!);
         _setState(LauncherState.downloading);
         await download(_setProgress);
@@ -183,15 +183,24 @@ class Launcher {
 
   ///TODO not sure this works
   void _runWindowsExecutable(String path) {
-    var result = Process.runSync('cmd', ['start', path]);
-    stdout.write(result.stdout);
-    stderr.write(result.stderr);
+    print("RUNNING");
+    print(path);
+    var dirPath = path.split('\\');
+    var exeName = dirPath.removeLast();
+    var result = Process.runSync(
+        'cd', [dirPath.join('\\'), '&&', 'start', exeName],
+        runInShell: true);
+    print(result.stdout);
+    print(result.stderr);
   }
 
   void _rewriteMacExecutablePermission(String path) {
     //Write permission to execute app
     var innerExecutable =
-        Directory(path + "/Contents/MacOS").listSync().first.path;
+        Directory(path + _slash + "Contents" + _slash + "MacOS")
+            .listSync()
+            .first
+            .path;
     var result = Process.runSync('chmod', ["+x", innerExecutable]);
     stdout.write(result.stdout);
     stderr.write(result.stderr);
@@ -216,9 +225,13 @@ class Launcher {
 
   Future<String?> _findWindowsExecutable(String folderPath) async {
     var dir = Directory(folderPath).listSync(recursive: true).toList();
+    print(folderPath);
+    dir.forEach((element) {
+      print(element);
+    });
     var exe = dir
         .map((e) => e.path)
-        .firstWhere((e) => e == 'Bridgestars.exe', orElse: () => '');
+        .firstWhere((e) => e.endsWith('Bridgestars.exe'), orElse: () => '');
     return exe.isEmpty ? null : exe;
   }
 
@@ -347,13 +360,16 @@ class Launcher {
     _setState(LauncherState.connecting);
     Version? v;
     Map<String, dynamic> data;
-    try{
+    try {
+      var docName = Platform.isWindows ? "game-windows" : "game-mac";
       var res = await http.get(Uri.parse(
-          'https://firestore.googleapis.com/v1/projects/bridge-fcee8/databases/(default)/documents/versions/game-mac'));
+          'https://firestore.googleapis.com/v1/projects/bridge-fcee8/databases/(default)/documents/versions/' +
+              docName));
       data = json.decode(res.body) as Map<String, dynamic>;
-    }
-    catch(e) {
-      throw new Exception("Could not connect, please check your internet connection",);
+    } catch (e) {
+      throw new Exception(
+        "Could not connect, please check your internet connection",
+      );
     }
     try {
       v = _getLatestVersionFromFirestoreDoc(data);
@@ -363,8 +379,7 @@ class Launcher {
         return v;
       }
       throw new Exception();
-    }
-    catch(e){
+    } catch (e) {
       throw new Exception("Could not parse remote app version");
     }
   }
@@ -383,23 +398,30 @@ class Launcher {
 
 //#endregion
 
-
-
   Future waitForGameClose() async {
-    if(Platform.isMacOS) {
+    if (Platform.isMacOS) {
       var r = Process.runSync('ps', ['-e']);
       print(r.stderr.toString());
 
-      if(!r.stdout.toString().contains(getGameDir())) {
+      if (!r.stdout.toString().contains(getGameDir())) {
+        print("GAME IS NOT RUNNING ANYMORE: Opening");
+        return;
+      }
+    } else if (Platform.isWindows) {
+      var r = Process.runSync(
+          'tasklist', ['/svc', '|', 'findstr', 'Bridgestars.exe'],
+          runInShell: true);
+      print(r.stderr.toString());
+      print(r.stdout.toString());
+      if (!r.stdout.toString().contains("Bridgestars.exe")) {
         print("GAME IS NOT RUNNING ANYMORE: Opening");
         return;
       }
     }
-    else if (Platform.isWindows){} //TODO
     print("GAME IS RUNNING");
-    await Future.delayed(Duration(milliseconds: 500)).then((e) => waitForGameClose());
+    await Future.delayed(Duration(milliseconds: 500))
+        .then((e) => waitForGameClose());
   }
-
 }
 
 //#region data classes
@@ -431,10 +453,11 @@ class Version extends Comparable {
   String getInfo() => _info;
 
   String toString() => "Version(" + getNbr() + ", " + _url + ", " + _info + ")";
-  String getDisplayValue(){
+  String getDisplayValue() {
     var a = "Alpha ";
-    if(_nbrs[0] != 0) a = "Release ";
-    else if(_nbrs[1] != 0) a = "Beta ";
+    if (_nbrs[0] != 0)
+      a = "Release ";
+    else if (_nbrs[1] != 0) a = "Beta ";
     return a + getNbr();
   }
 
