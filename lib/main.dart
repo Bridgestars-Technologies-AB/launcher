@@ -15,6 +15,7 @@ import 'package:window_manager/window_manager.dart';
 //import 'package:liquid_progress_indicator/liquid_progress_indicator.dart';
 //import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:loading_indicator/loading_indicator.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 
 import 'launcherView.dart';
 import 'videoView.dart';
@@ -27,17 +28,29 @@ void main() async {
   await windowManager.ensureInitialized();
   if (!kIsWeb &&
       (Platform.isMacOS || Platform.isLinux || Platform.isWindows)) {}
+
+  await DartVLC.initialize();
+
+  if (Platform.isWindows)
+    doWhenWindowReady(() {
+      //const initialSize = Size(600, 450);
+      appWindow.minSize = Size(1620 / 3, 1080 / 3);
+      appWindow.size = Size(1620 / 2, 1080 / 2);
+      appWindow.maxSize = Size(1620 / 1.5, 1080 / 1.5);
+      //appWindow.alignment = Alignment.center;
+      appWindow.show();
+    });
+
   await windowManager.ensureInitialized();
-  DartVLC.initialize();
 
   WindowOptions windowOptions = WindowOptions(
     size: Size(1620 / 2, 1080 / 2),
     center: true,
     backgroundColor: Colors.transparent,
     skipTaskbar: false,
-    minimumSize: Size(1620 / 4, 1080 / 4),
+    minimumSize: Size(1620 / 3, 1080 / 3),
     maximumSize: Size(1620 / 1.5, 1080 / 1.5),
-    titleBarStyle: TitleBarStyle.normal,
+    titleBarStyle: TitleBarStyle.hidden,
   );
   await windowManager.setAspectRatio(3.0 / 2.0);
   windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -82,10 +95,32 @@ class _LauncherState extends State<LauncherApp> {
                         print(b);
                         showUI = b;
                       })),
-              LauncherView(showUI: showUI, videoViewKey: videoKey)
+              LauncherView(showUI: showUI, videoViewKey: videoKey),
+              if (Platform.isWindows)
+                WindowTitleBarBox(
+                    child: Row(
+                  children: [Expanded(child: MoveWindow()), WindowButtons()],
+                ))
             ],
           ),
         ));
+  }
+}
+
+final closeButtonColors = WindowButtonColors(
+    mouseOver: Color(0xFFD32F2F),
+    mouseDown: Color(0xFFB71C1C),
+    iconNormal: Color(0xFFFFFFFF),
+    iconMouseOver: Colors.white);
+
+class WindowButtons extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        CloseWindowButton(colors: closeButtonColors),
+      ],
+    );
   }
 }
 

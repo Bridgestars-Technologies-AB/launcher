@@ -289,7 +289,10 @@ Future showOKDialog(
         alertStyle: AlertButtonStyle.ok,
         windowTitle: title,
         text: message,
-        options: FlutterPlatformAlertOption(additionalWindowTitleOnWindows: ""),
+        options: FlutterPlatformAlertOption(
+            additionalWindowTitleOnWindows: "",
+            showAsLinksOnWindows: true,
+            preferMessageBoxOnWindows: false),
         iconStyle: IconStyle.information);
   } else
     return Future.delayed(Duration(milliseconds: 50)).then(
@@ -307,8 +310,8 @@ Future showErrorRetryDialog(
         text: message,
         iconStyle: IconStyle.error);
   } else
-    return Future.delayed(Duration(milliseconds: 50)).then(
-        (v) => showOKDialog(message: message, title: title, widget: widget));
+    return Future.delayed(Duration(milliseconds: 50)).then((v) =>
+        showErrorRetryDialog(message: message, title: title, widget: widget));
 }
 
 Future showCustomDialog(
@@ -328,8 +331,15 @@ Future showCustomDialog(
         text: message,
         iconStyle: iconStyle);
   } else
-    return Future.delayed(Duration(milliseconds: 50)).then(
-        (v) => showOKDialog(message: message, title: title, widget: widget));
+    return Future.delayed(Duration(milliseconds: 50)).then((v) =>
+        showCustomDialog(
+            widget: widget,
+            message: message,
+            title: title,
+            positiveButtonTitle: positiveButtonTitle,
+            neutralButtonTitle: negativeButtonTitle,
+            negativeButtonTitle: negativeButtonTitle,
+            iconStyle: iconStyle));
 }
 
 showAlertDialog(String title, String message, List<Text> btnTexts,
