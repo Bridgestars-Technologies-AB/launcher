@@ -136,8 +136,8 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
               Container(height: height * 0.5),
               Container(
                   constraints: BoxConstraints(
-                      minHeight: height / 12,
-                      maxHeight: height / 12,
+                      minHeight: height / 11,
+                      maxHeight: height / 11,
                       minWidth: width / 7),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -152,14 +152,17 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
                         style: TextStyle(
                             fontSize: width / 35, color: Colors.white)),
                   )),
-              Container(height: height / 40),
+              Container(height: height/100),
               TextButton(
                   onPressed: () async {
-                      var m = launcher?.localAppVersion?.getInfo() ?? "www.bridgestars.se";
-                      await showOKDialog(widget: widget, message: m, title: "General Information");
+                      bool isUpdate = launcherState == LauncherState.canUpdate;
+                      // var title = isUpdate ? "Update Notes" : "General Information";
+                      // var m = isUpdate ? launcher?.remoteAppVersion?.getInfo()
+                      // var m = launcher?.localAppVersion?.getInfo() ?? "www.bridgestars.se";
+                      await showOKDialog(widget: widget, message: "asdads", title: "General Information");
                   },
                   child: Text(launcherState == LauncherState.canUpdate ? "Update Notes" : "Read more",
-                    style: TextStyle(decoration: TextDecoration.underline, color: Colors.white70))
+                    style: TextStyle(decoration: TextDecoration.underline, color: Colors.white70, fontSize: width/60))
               )
               //
             ],
@@ -231,7 +234,7 @@ String getLauncherStateString(LauncherState s, Launcher? launcher) {
     case LauncherState.canInstall:
       return "INSTALL";
     case LauncherState.canUpdate:
-      return "UPDATE";
+      return " UPDATE ";
     case LauncherState.canRun:
       return "START";
     case LauncherState.waiting:
