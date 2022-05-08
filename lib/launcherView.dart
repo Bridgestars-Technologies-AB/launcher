@@ -42,24 +42,27 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
   void _init() async {
     try {
       launcher = await Launcher.create(setLauncherState);
-      print('"' + launcher!.getGameDir().toString() + '"');
-      //throw new Exception("test");
-      //TODO REMOVE
-      print("TESTING");
-      var p = '\\';
-      print("P: " + p);
-      var res = await Process.run(
-          "cd",
-          [
-            launcher!.getGameDir(),
-            "&&"
-                "start"
-                "."
-          ],
-          runInShell: true);
-      print("err" + res.stderr.toString());
-      print("res" + res.stdout.toString());
-      //await Process.run('open', ['-a', 'finder', launcher!.getGameDir()]);
+      print('Game Dir: "' + launcher!.getGameDir().toString() + '"');
+
+      //TODO REMOVE THIS
+      if (Platform.isWindows) {
+        var res = await Process.run(
+            "cd",
+            [
+              launcher!.getGameDir(),
+              "&&"
+                  "start"
+                  "."
+            ],
+            runInShell: true);
+        print("err" + res.stderr.toString());
+        print("res" + res.stdout.toString());
+      } else {
+        await Process.run('open', ['-a', 'finder', launcher!.getGameDir()]);
+        await Process.run(
+            'open', ['-a', 'TextEdit', launcher!.root + "/.appVersion"]);
+      }
+      //
     } catch (e) {
       await showErrorRetryDialog(
           widget: widget, message: getExceptionMessage(e));
@@ -97,18 +100,6 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
 
   String getExceptionMessage(e) =>
       e.toString().substring(e.toString().indexOf(':') + 1);
-
-/*  void OpenErrorModal(String message, List<String> btnTexts,
-      List<Function()> btnActions) async {
-    if (widget.showUI) {
-      var m = message.substring(message.indexOf(':') + 1);
-      //TODO add report btn
-      showAlertDialog("Ops, Something went wrong", m,
-          btnTexts.map((s) => Text(s)).toList(), btnActions);
-    } else
-      Future.delayed(Duration(milliseconds: 50))
-          .then((v) => OpenErrorModal(message, btnTexts, btnActions));
-  }*/
 
   void setLauncherState(LauncherState s, DownloadInfo? p) => setState(() {
         launcherState = s;
@@ -251,16 +242,15 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
 
 String getLauncherStateString(LauncherState s, Launcher? launcher) {
   String v = launcher?.localAppVersion?.getDisplayValue() ?? "";
-  String nbr = launcher?.localAppVersion?.getNbr() ?? "";
   switch (s) {
     case LauncherState.canDownload:
-      return "DOWNLOAD";
+      return " DOWNLOAD ";
     case LauncherState.canInstall:
-      return "INSTALL";
+      return " INSTALL ";
     case LauncherState.canUpdate:
       return " UPDATE ";
     case LauncherState.canRun:
-      return "START";
+      return " PLAY ";
     case LauncherState.waiting:
       return "Waiting";
     case LauncherState.downloading:
@@ -270,7 +260,7 @@ String getLauncherStateString(LauncherState s, Launcher? launcher) {
     case LauncherState.uninstalling:
       return "Uninstalling";
     case LauncherState.updating:
-      return "Downloading version " + nbr;
+      return "Updating to " + v;
     case LauncherState.running:
       return "Running";
     case LauncherState.connecting:

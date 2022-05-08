@@ -98,11 +98,11 @@ class Launcher {
   Future handleBtnPress() async {
     switch (_currentState) {
       case LauncherState.canDownload:
-        await setLocalAppVersion(remoteAppVersion!);
         _setState(LauncherState.downloading);
         await download(_setProgress);
         _setState(LauncherState.installing);
         await install();
+        await setLocalAppVersion(remoteAppVersion!);
         updateState();
         break;
 
@@ -115,10 +115,10 @@ class Launcher {
       case LauncherState.canUpdate:
         _setState(LauncherState.preparingUpdate);
         await uninstall();
-        await setLocalAppVersion(remoteAppVersion!);
         _setState(LauncherState.updating);
         await download(_setProgress);
         await install();
+        await setLocalAppVersion(remoteAppVersion!);
         updateState();
         break;
 
@@ -297,9 +297,9 @@ class Launcher {
 
 //#region download
   Future download(void Function(DownloadInfo) callback) async {
-    if (localAppVersion != null) {
+    if (remoteAppVersion != null) {
       return _downloadFile(
-          localAppVersion!.getUrl(), getArchivePath(), callback);
+          remoteAppVersion!.getUrl(), getArchivePath(), callback);
     }
     throw new Exception("Current version not set");
   }
