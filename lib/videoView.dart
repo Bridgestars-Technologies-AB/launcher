@@ -8,7 +8,11 @@ class VideoView extends StatefulWidget {
   final Function(bool) onShowUIChanged;
   bool _triggerHideSequence = false;
 
-  VideoView({Key? key, required this.onShowUIChanged, bool triggerHideSequence=false}) : super(key: key){
+  VideoView(
+      {Key? key,
+      required this.onShowUIChanged,
+      bool triggerHideSequence = false})
+      : super(key: key) {
     _triggerHideSequence = triggerHideSequence;
   }
 
@@ -91,7 +95,6 @@ class VideoViewState extends State<VideoView> with WindowListener {
     //player.stop();
     await windowManager.hide();
     await windowManager.setSkipTaskbar(true);
-
   }
 
   Future showWithBackground() async {
@@ -106,8 +109,6 @@ class VideoViewState extends State<VideoView> with WindowListener {
     setShowUI(true);
     //TODO show background
   }
-
-
 
   // downloading logic is handled by this method
 
@@ -141,7 +142,6 @@ class VideoViewState extends State<VideoView> with WindowListener {
       //width: 640,
       scale: 1.0, // default
       showControls: false, // default
-      playlistLength: 1,
     );
   }
 }

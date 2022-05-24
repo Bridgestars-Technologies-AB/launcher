@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:bridgestars_launcher/main.dart';
@@ -45,10 +46,27 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
   void _init() async {
     try {
       launcher = await Launcher.create(setLauncherState);
-      print(launcher!.getGameDir());
-      //throw new Exception("test");
-      //TODO REMOVE
-      //await Process.run('open', ['-a', 'finder', launcher!.getGameDir()]);
+      print('Game Dir: "' + launcher!.getGameDir().toString() + '"');
+
+      //TODO REMOVE THIS
+      if (Platform.isWindows) {
+        var res = await Process.run(
+            "cd",
+            [
+              launcher!.getGameDir(),
+              "&&"
+                  "start"
+                  "."
+            ],
+            runInShell: true);
+        print("err" + res.stderr.toString());
+        print("res" + res.stdout.toString());
+      } else {
+        await Process.run('open', ['-a', 'finder', launcher!.getGameDir()]);
+        await Process.run(
+            'open', ['-a', 'TextEdit', launcher!.root + "/.appVersion"]);
+      }
+      //
     } catch (e) {
       await showErrorRetryDialog(
           widget: widget, message: getExceptionMessage(e));
@@ -377,16 +395,15 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
 
 String getLauncherStateString(LauncherState s, Launcher? launcher) {
   String v = launcher?.localAppVersion?.getDisplayValue() ?? "";
-  String nbr = launcher?.localAppVersion?.getNbr() ?? "";
   switch (s) {
     case LauncherState.canDownload:
-      return "DOWNLOAD";
+      return " DOWNLOAD ";
     case LauncherState.canInstall:
-      return "INSTALL";
+      return " INSTALL ";
     case LauncherState.canUpdate:
       return " UPDATE ";
     case LauncherState.canRun:
-      return "START";
+      return " PLAY ";
     case LauncherState.waiting:
       return "Waiting";
     case LauncherState.downloading:
@@ -396,7 +413,7 @@ String getLauncherStateString(LauncherState s, Launcher? launcher) {
     case LauncherState.uninstalling:
       return "Uninstalling";
     case LauncherState.updating:
-      return "Downloading version " + nbr;
+      return "Updating to " + v;
     case LauncherState.running:
       return "Running";
     case LauncherState.connecting:
@@ -415,6 +432,10 @@ Future showOKDialog(
         alertStyle: AlertButtonStyle.ok,
         windowTitle: title,
         text: message,
+        options: FlutterPlatformAlertOption(
+            additionalWindowTitleOnWindows: "",
+            showAsLinksOnWindows: true,
+            preferMessageBoxOnWindows: false),
         iconStyle: IconStyle.information);
   } else
     return Future.delayed(Duration(milliseconds: 50)).then(
@@ -432,8 +453,8 @@ Future showErrorRetryDialog(
         text: message,
         iconStyle: IconStyle.error);
   } else
-    return Future.delayed(Duration(milliseconds: 50)).then(
-        (v) => showOKDialog(message: message, title: title, widget: widget));
+    return Future.delayed(Duration(milliseconds: 50)).then((v) =>
+        showErrorRetryDialog(message: message, title: title, widget: widget));
 }
 
 Future showCustomDialog(
@@ -453,8 +474,15 @@ Future showCustomDialog(
         text: message,
         iconStyle: iconStyle);
   } else
-    return Future.delayed(Duration(milliseconds: 50)).then(
-        (v) => showOKDialog(message: message, title: title, widget: widget));
+    return Future.delayed(Duration(milliseconds: 50)).then((v) =>
+        showCustomDialog(
+            widget: widget,
+            message: message,
+            title: title,
+            positiveButtonTitle: positiveButtonTitle,
+            neutralButtonTitle: negativeButtonTitle,
+            negativeButtonTitle: negativeButtonTitle,
+            iconStyle: iconStyle));
 }
 
 showAlertDialog(String title, String message, List<Text> btnTexts,
