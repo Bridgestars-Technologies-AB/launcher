@@ -138,19 +138,4 @@ ThemeData defaultTheme = ThemeData(
 
 // UNINSTALL DIALOG
 //
-// TextButton(
-//
-// child: Text("Uninstall", style: TextStyle(color: Colors.white),),
-//   onPressed: () async {
-//   try{
-//     showAlertDialog(context, "Alert", "Are you sure you want to uninstall?",[Text("Cancel"), Text("Uninstall", style: TextStyle(color: Colors.red),)], [() => {}, () async {
-//       await launcher?.uninstall();
-//       launcher?.updateState();
-//     }]);
-//   }
-//   catch (e) {
-//     setMessage(e.toString());
-//     throw Exception(e);
-//     }
-//   },//launcher.handleBtnPress(),
-// ),
+

@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   dart_vlc
   flutter_platform_alert
+  url_launcher_windows
   window_manager
 )
 
