@@ -34,7 +34,7 @@ void main() async {
   if (Platform.isWindows)
     doWhenWindowReady(() {
       //const initialSize = Size(600, 450);
-      appWindow.minSize = Size(1620 / 3, 1080 / 3);
+      appWindow.minSize = Size(1620 * 0.4, 1080 * 0.4);
       appWindow.size = Size(1620 / 2, 1080 / 2);
       appWindow.maxSize = Size(1620 / 1.5, 1080 / 1.5);
       //appWindow.alignment = Alignment.center;
@@ -48,7 +48,7 @@ void main() async {
     center: true,
     backgroundColor: Colors.transparent,
     skipTaskbar: false,
-    minimumSize: Size(1620 / 3, 1080 / 3),
+    minimumSize: Size(1620 * 0.4, 1080 * 0.4),
     maximumSize: Size(1620 / 1.5, 1080 / 1.5),
     titleBarStyle: TitleBarStyle.hidden,
   );
@@ -171,4 +171,3 @@ ThemeData defaultTheme = ThemeData(
 
 // UNINSTALL DIALOG
 //
-

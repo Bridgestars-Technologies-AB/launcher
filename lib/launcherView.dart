@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:bridgestars_launcher/main.dart';
+import 'package:bridgestars_launcher/settingsPanel.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -16,6 +17,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'launcher.dart';
 import 'videoView.dart';
+import 'dialogs.dart';
 
 class LauncherView extends StatefulWidget {
   final GlobalKey<VideoViewState> videoViewKey;
@@ -50,21 +52,21 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
 
       //TODO REMOVE THIS
       if (Platform.isWindows) {
-        var res = await Process.run(
-            "cd",
-            [
-              launcher!.getGameDir(),
-              "&&"
-                  "start"
-                  "."
-            ],
-            runInShell: true);
-        print("err" + res.stderr.toString());
-        print("res" + res.stdout.toString());
+        // var res = await Process.run(
+        //     "cd",
+        //     [
+        //       launcher!.getGameDir(),
+        //       "&&"
+        //           "start"
+        //           "."
+        //     ],
+        //     runInShell: true);
+        // print("err" + res.stderr.toString());
+        // print("res" + res.stdout.toString());
       } else {
-        await Process.run('open', ['-a', 'finder', launcher!.getGameDir()]);
-        await Process.run(
-            'open', ['-a', 'TextEdit', launcher!.root + "/.appVersion"]);
+        //   await Process.run('open', ['-a', 'finder', launcher!.getGameDir()]);
+        //   await Process.run(
+        //       'open', ['-a', 'TextEdit', launcher!.root + "/.appVersion"]);
       }
       //
     } catch (e) {
@@ -124,13 +126,11 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
         showBtn = [
           LauncherState.canRun,
           LauncherState.canDownload,
-          LauncherState.canInstall,
           LauncherState.canUpdate
         ].contains(s);
       });
 
   bool settingsPanel = false;
-  bool updateDialog = false;
 
   @override
   Widget build(BuildContext context) {
@@ -158,15 +158,18 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
               onPressed: () {
                 setState(() {
                   settingsPanel = !settingsPanel;
-                  updateDialog = false;
                 });
               },
-              icon: Icon(Icons.settings),
+              icon: Icon(
+                Icons.settings,
+                color: Colors.white70,
+              ),
               tooltip: "Settings",
               //mouseCursor: SystemMouseCursors.click,
               iconSize: height / 18,
             ),
-            alignment: Alignment.topRight,
+            alignment:
+                Platform.isWindows ? Alignment.topLeft : Alignment.topRight,
           )),
       if (widget.showUI)
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -196,15 +199,13 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
                     Container(height: height / 100),
                     // TextButton(
 
-                    if (launcherState != LauncherState.canUpdate)
+                    if (launcherState == LauncherState.canUpdate)
                       TextButton(
                           onPressed: () async {
                             // var title = isUpdate ? "Update Notes" : "General Information";
                             // var m = isUpdate ? launcher?.remoteAppVersion?.getInfo()
                             // var m = launcher?.localAppVersion?.getInfo() ?? "www.bridgestars.se";
-                            setState(() {
-                              updateDialog = true;
-                            });
+                            showAppInfoDialog(launcher?.remoteAppVersion, null);
                           },
                           child: Text("Update Notes",
                               style: TextStyle(
@@ -269,127 +270,15 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
                 ])
         ]),
       if (settingsPanel)
-        Stack(
-          children: [
-            SettingsList(
-              platform: DevicePlatform.web,
-              //darkTheme: ,
-              sections: [
-                SettingsSection(
-                  title: Text('Settings'),
-                  tiles: <SettingsTile>[
-                    SettingsTile.navigation(
-                      leading: Icon(Icons.delete),
-                      title: Text('Clean Game Files'),
-                      description:
-                          Text('Use if the game does not work as expected.'),
-                      onPressed: (a) {},
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            Align(
-              child: Padding(
-                padding: EdgeInsets.all(height / 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Spacer(flex:6),
-                    IconButton(
-
-                    icon: Icon(FontAwesomeIcons.facebook, color: Color(0xFF4267B2)),
-                      onPressed: () {
-                        _launchUrl("asd");
-                      },
-
-                    ),
-                    Spacer(flex:1),
-                    Icon(FontAwesomeIcons.discord, color: Color(0xFF5865F2)),
-                    Spacer(flex:1),
-                    Icon(FontAwesomeIcons.instagram, color: Color(0xFFC13584)),
-                    Spacer(flex:6),
-                  ],
-                ),
-              ),
-              alignment: Alignment.bottomCenter,
-            ),
-            Padding(
-                padding: EdgeInsets.all(width / 70),
-                child: Align(
-                  child: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        settingsPanel = !settingsPanel;
-                      });
-                    },
-                    icon: Icon(Icons.close, color: Colors.black),
-                    tooltip: "Close",
-                    //mouseCursor: SystemMouseCursors.click,
-                    iconSize: height / 18,
-                  ),
-                  alignment: Alignment.topRight,
-                )),
-          ],
-        ),
-      if (updateDialog)
-        Dialog(
-          elevation: 1,
-          backgroundColor: const Color(0xFF121212),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
-          child: Padding(
-              padding: EdgeInsets.all(height / 45),
-              child: Container(
-                height: height * 0.7,
-                width: width * 0.4,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Image.asset('assets/app_icon.ico', height: height / 6),
-                    Text(
-                      "Bridgestars Launcher",
-                      style: TextStyle(fontSize: height / 35),
-                    ),
-                    Text(
-                      launcher?.remoteAppVersion?.getDisplayValue() ??
-                          "No version number found",
-                      style: TextStyle(fontSize: height / 35),
-                    ),
-                    Container(height: height / 10),
-                    Container(
-                      constraints: BoxConstraints.expand(height: height / 5),
-                      child: SingleChildScrollView(
-                          child: Padding(
-                              padding: EdgeInsets.fromLTRB(
-                                  width / 30, 0, width / 30, 0),
-                              child: Text(
-                                  launcher?.remoteAppVersion?.getInfo() ??
-                                      "No update notes found",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: height / 40)))),
-                    ),
-                    TextButton(
-                        onPressed: () {
-                          setState(() {
-                            updateDialog = false;
-                          });
-                        },
-                        style: TextButton.styleFrom(
-                            fixedSize: Size(width / 10, height / 15)),
-                        child: Text(
-                          "Close",
-                          style: TextStyle(fontSize: height / 35),
-                        )),
-                  ],
-                ),
-              )),
-        ),
+        drawSettingsPanel(
+            context,
+            launcher,
+            () => setState(() {
+                  settingsPanel = !settingsPanel;
+                })),
     ]);
   }
-  void _launchUrl(String url) async {
-    if (!await launchUrl(Uri.parse(url))) throw 'Could not launch $url';
-  }
+
   bool testVal = false;
 }
 
@@ -398,8 +287,6 @@ String getLauncherStateString(LauncherState s, Launcher? launcher) {
   switch (s) {
     case LauncherState.canDownload:
       return " DOWNLOAD ";
-    case LauncherState.canInstall:
-      return " INSTALL ";
     case LauncherState.canUpdate:
       return " UPDATE ";
     case LauncherState.canRun:
@@ -421,25 +308,6 @@ String getLauncherStateString(LauncherState s, Launcher? launcher) {
     case LauncherState.preparingUpdate:
       return "Preparing update";
   }
-}
-
-Future showOKDialog(
-    {required LauncherView widget,
-    required String message,
-    required String title}) async {
-  if (widget.showUI) {
-    return await FlutterPlatformAlert.showAlert(
-        alertStyle: AlertButtonStyle.ok,
-        windowTitle: title,
-        text: message,
-        options: FlutterPlatformAlertOption(
-            additionalWindowTitleOnWindows: "",
-            showAsLinksOnWindows: true,
-            preferMessageBoxOnWindows: false),
-        iconStyle: IconStyle.information);
-  } else
-    return Future.delayed(Duration(milliseconds: 50)).then(
-        (v) => showOKDialog(message: message, title: title, widget: widget));
 }
 
 Future showErrorRetryDialog(
@@ -483,35 +351,4 @@ Future showCustomDialog(
             neutralButtonTitle: negativeButtonTitle,
             negativeButtonTitle: negativeButtonTitle,
             iconStyle: iconStyle));
-}
-
-showAlertDialog(String title, String message, List<Text> btnTexts,
-    List<Function()> btnActions) {
-  if (btnTexts.length != btnActions.length)
-    throw new ArgumentError("nbr of actions must be equal to nbr of btn texts");
-
-// set up the AlertDialog
-
-// show the dialog
-  if (navigatorKey.currentContext == null)
-    throw new Exception("Something not set up right");
-  showDialog(
-    context: navigatorKey.currentContext!,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: btnActions
-            .asMap()
-            .entries
-            .map((e) => TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); //pop dialog
-                  e.value(); //run btnAction
-                },
-                child: btnTexts.elementAt(e.key)))
-            .toList(),
-      );
-    },
-  );
 }

@@ -12,7 +12,6 @@ import 'dart:convert';
 
 enum LauncherState {
   canDownload,
-  canInstall,
   canUpdate,
   canRun,
   waiting,
@@ -95,6 +94,12 @@ class Launcher {
     return l;
   }
 
+  Future refreshAppVersion() async {
+    localAppVersion = await getLocalAppVersion();
+    remoteAppVersion = await getRemoteAppVersion();
+    return;
+  }
+
   Future handleBtnPress() async {
     switch (_currentState) {
       case LauncherState.canDownload:
@@ -103,12 +108,6 @@ class Launcher {
         _setState(LauncherState.installing);
         await install();
         await setLocalAppVersion(remoteAppVersion!);
-        updateState();
-        break;
-
-      case LauncherState.canInstall:
-        _setState(LauncherState.installing);
-        await install();
         updateState();
         break;
 
@@ -146,9 +145,10 @@ class Launcher {
       _setState(LauncherState.canUpdate);
     else if (await updateExecutablePaths())
       _setState(LauncherState.canRun);
-    else if (await archiveExists())
-      _setState(LauncherState.canInstall);
-    else
+    else if (await archiveExists()) {
+      await uninstall();
+      _setState(LauncherState.canDownload);
+    } else
       _setState(LauncherState.canDownload);
     return _currentState;
   }
@@ -160,8 +160,6 @@ class Launcher {
       windowsExecutablePath = await _findWindowsExecutable(getExtractDir());
     print(macExecutablePath);
     return canRun();
-    if (Platform.isWindows) return windowsExecutablePath != null;
-    return false;
   }
 
   //#region Run
@@ -277,9 +275,20 @@ class Launcher {
 
 //region uninstall
 
+  Future canUninstall() async =>
+      new File(getAppVersionPath()).existsSync() ||
+      new Directory(getGameDir()).listSync(recursive: true).length != 0 ||
+      await archiveExists();
+
   Future uninstall() async {
     await _removeArchive();
     await _removeGameDir();
+    await _removeVersionFile();
+  }
+
+  Future _removeVersionFile() async {
+    var f = new File(getAppVersionPath());
+    if (f.existsSync()) f.deleteSync();
   }
 
   Future _removeGameDir() async {
@@ -385,6 +394,8 @@ class Launcher {
   }
 
   Future<Version?> getLocalAppVersion() async {
+    var f = new File(getAppVersionPath());
+    if (!f.existsSync()) return null;
     var lines = new File(getAppVersionPath()).readAsLinesSync();
     if (lines.length != 3) return null;
     return Version.parse(lines[0], lines[1], lines[2]);
@@ -392,8 +403,11 @@ class Launcher {
 
   Future setLocalAppVersion(Version v) async {
     localAppVersion = v;
-    await File(getAppVersionPath())
-        .writeAsString(v.getNbr() + "\n" + v.getUrl() + "\n" + v.getInfo());
+    await File(getAppVersionPath()).writeAsString(v.getNbr() +
+        "\n" +
+        v.getUrl() +
+        "\n" +
+        v.getInfo().replaceAll('\n', ';'));
   }
 
 //#endregion
@@ -464,7 +478,7 @@ class Version extends Comparable {
   Version._(List<int> nbrs, String url, String info) {
     _nbrs = nbrs;
     _url = url;
-    _info = info;
+    _info = info.replaceAll(';', '\n');
   }
 
   static Version? parse(String s, String url, String info) {
