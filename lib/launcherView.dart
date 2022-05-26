@@ -95,7 +95,7 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
           await widget.videoViewKey.currentState?.showWithBackground();
         }
       } else
-        launcher?.handleBtnPress();
+        await launcher?.handleBtnPress();
     } catch (e) {
       await showErrorRetryDialog(
           message: getExceptionMessage(e), widget: widget);

@@ -342,15 +342,13 @@ class Launcher {
             "Can't establish a valid connection, please report this issue.");
       }
       text = text.substring(text.indexOf(searchTerm));
-      singleUseDownloadLink = text.substring(0, text.indexOf(' '));
+      singleUseDownloadLink = text.substring(0, text.indexOf('"'));
     });
 
     print(singleUseDownloadLink);
 
-    throw new Exception("testing");
-
     await Dio().download(
-      uri,
+      singleUseDownloadLink,
       savePath,
       onReceiveProgress: (rcv, total) {
         //print(
