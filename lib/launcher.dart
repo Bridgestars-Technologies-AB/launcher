@@ -256,19 +256,24 @@ class Launcher {
     print("EXTRACTING");
     // Use an InputFileStream to access the zip file without storing it in memory.
 
-    var bytes = new File(zipPath).readAsBytesSync();
-    var archive = ZipDecoder().decodeBytes(bytes);
-    for (var file in archive) {
-      var fileName = '$unzipPath/${file.name}';
-      if (file.isFile) {
-        var outFile = File(fileName);
-        //_tempImages.add(outFile.path);
-        if (!fileName.contains('__MACOSX')) {
-          outFile = await outFile.create(recursive: true);
-          await outFile.writeAsBytes(file.content);
+    try {
+      var bytes = new File(zipPath).readAsBytesSync();
+      var archive = ZipDecoder().decodeBytes(bytes);
+      for (var file in archive) {
+        var fileName = '$unzipPath/${file.name}';
+        if (file.isFile) {
+          var outFile = File(fileName);
+          //_tempImages.add(outFile.path);
+          if (!fileName.contains('__MACOSX')) {
+            outFile = await outFile.create(recursive: true);
+            await outFile.writeAsBytes(file.content);
+          }
         }
       }
+    } catch (e, stacktrace) {
+      throw new Exception("Download was corrupted, please try again");
     }
+
     await _removeArchive();
     return;
   }
@@ -331,24 +336,8 @@ class Launcher {
       secondsLeft = ((total - rcv) / speedMBs) / 1e6;
     }
 
-    var singleUseDownloadLink = "";
-    await Dio().get(uri).then((value) {
-      print(value.data.toString());
-      var text = value.data.toString();
-      var searchTerm = "https://cdn";
-      if (!text.contains(searchTerm)) {
-        _setState(LauncherState.canDownload);
-        throw new Exception(
-            "Can't establish a valid connection, please report this issue.");
-      }
-      text = text.substring(text.indexOf(searchTerm));
-      singleUseDownloadLink = text.substring(0, text.indexOf('"'));
-    });
-
-    print(singleUseDownloadLink);
-
     await Dio().download(
-      singleUseDownloadLink,
+      uri,
       savePath,
       onReceiveProgress: (rcv, total) {
         //print(

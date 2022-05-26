@@ -69,8 +69,8 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
       }
       //
     } catch (e) {
-      await showErrorRetryDialog(
-          widget: widget, message: getExceptionMessage(e));
+      await showErrorDialog(
+          widget: widget, message: getExceptionMessage(e), btn_text: "Retry");
       _init();
     }
   }
@@ -96,10 +96,12 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
         }
       } else
         await launcher?.handleBtnPress();
-    } catch (e) {
-      await showErrorRetryDialog(
-          message: getExceptionMessage(e), widget: widget);
-      _handleBtnPress();
+    } catch (e, stacktrace) {
+      await showErrorDialog(message: getExceptionMessage(e), widget: widget);
+      print("ERROR: " + e.toString());
+      print("ERROR: " + stacktrace.toString());
+      await launcher?.refreshAppVersion();
+      await launcher?.updateState();
     }
   }
 

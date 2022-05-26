@@ -229,19 +229,20 @@ showAlertDialog(String title, String message, List<Text> btnTexts,
   );
 }
 
-Future showErrorRetryDialog(
+Future showErrorDialog(
     {required LauncherView widget,
     required String message,
-    String title = "Ops, Something went wrong"}) async {
+    String title = "Ops, Something went wrong",
+    String btn_text = "OK"}) async {
   if (widget.showUI) {
     return await FlutterPlatformAlert.showCustomAlert(
-        positiveButtonTitle: "Try again",
+        positiveButtonTitle: "OK",
         windowTitle: title,
         text: message,
         iconStyle: IconStyle.error);
   } else
-    return Future.delayed(Duration(milliseconds: 50)).then((v) =>
-        showErrorRetryDialog(message: message, title: title, widget: widget));
+    return Future.delayed(Duration(milliseconds: 50)).then(
+        (v) => showErrorDialog(message: message, title: title, widget: widget));
 }
 
 Future showCustomDialog(
