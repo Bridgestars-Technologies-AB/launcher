@@ -1,107 +1,116 @@
+import 'dart:io';
+import 'dart:ui';
+
+//import 'package:desktop_window/desktop_window.dart';
+import 'package:bridgestars_launcher/videoView.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-//import 'tools.dart';
-import 'constants.dart' show MyTheme, bridgestarsTheme;
-import 'pages/home/home.dart';
+
+import 'package:bridgestars_launcher/launcher.dart';
+import 'package:dart_vlc/dart_vlc.dart';
+import 'package:flutter/widgets.dart';
+import 'package:window_manager/window_manager.dart';
+
+//import 'package:liquid_progress_indicator/liquid_progress_indicator.dart';
+//import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:loading_indicator/loading_indicator.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 
-void main() {
-  runApp(MyApp());
+import 'launcherView.dart';
+import 'videoView.dart';
 
-  doWhenWindowReady(() {
-    final win = appWindow;
-    final initialSize = Size(600, 450);
-    win.minSize = initialSize;
-    win.size = initialSize;
-    win.alignment = Alignment.center;
-    win.title = "Custom window with Flutter";
-    win.show();
+late final navigatorKey = GlobalKey<NavigatorState>();
+GlobalKey<VideoViewState> videoKey = GlobalKey();
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await windowManager.ensureInitialized();
+  if (!kIsWeb &&
+      (Platform.isMacOS || Platform.isLinux || Platform.isWindows)) {}
+
+  await DartVLC.initialize();
+
+  if (Platform.isWindows)
+    doWhenWindowReady(() {
+      //const initialSize = Size(600, 450);
+      appWindow.minSize = Size(1620 * 0.4, 1080 * 0.4);
+      appWindow.size = Size(1620 / 2, 1080 / 2);
+      appWindow.maxSize = Size(1620 / 1.5, 1080 / 1.5);
+      //appWindow.alignment = Alignment.center;
+      appWindow.show();
+    });
+
+  await windowManager.ensureInitialized();
+
+  WindowOptions windowOptions = WindowOptions(
+    size: Size(1620 / 2, 1080 / 2),
+    center: true,
+    backgroundColor: Colors.transparent,
+    skipTaskbar: false,
+    minimumSize: Size(1620 * 0.4, 1080 * 0.4),
+    maximumSize: Size(1620 / 1.5, 1080 / 1.5),
+    titleBarStyle: TitleBarStyle.hidden,
+  );
+  await windowManager.setAspectRatio(3.0 / 2.0);
+  windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+    await windowManager.focus();
   });
+
+  runApp(MaterialApp(
+      navigatorKey: navigatorKey,
+      debugShowCheckedModeBanner: false,
+      home: LauncherApp()));
 }
 
-// class MyApp extends StatelessWidget {
-//   const MyApp({Key? key}) : super(key: key);
-//
-//   // This widget is the root of your application.
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       title: 'Flutter Demo',
-//       theme: ThemeData.dark(),
-//       home: const MyHomePage(title: 'Flutter Demo Home Page'),
-//     );
-//   }
-// }
+class LauncherApp extends StatefulWidget {
+  const LauncherApp({Key? key}) : super(key: key);
 
-const borderColor = Color(0xFF805306);
+  @override
+  _LauncherState createState() => _LauncherState();
+}
 
-class MyApp extends StatelessWidget {
-  //const MyApp({Key? key}) : super(key: key);
+class _LauncherState extends State<LauncherApp> {
+  bool showUI = false;
+  bool hide = true;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
+        title: 'Bridgestars LauncherAAA',
+        theme: defaultTheme,
+        // theme: ThemeData(
+        //   primarySwatch: Colors.blue,
+        //   visualDensity: VisualDensity.adaptivePlatformDensity,
+        // ),
         home: Scaffold(
-            body: WindowBorder(
-                color: borderColor,
-                width: 1,
-                child: Row(children: [LeftSide(), RightSide()]))));
+          body: Stack(
+            children: [
+              VideoView(
+                  key: videoKey,
+                  onShowUIChanged: (b) => setState(() {
+                        print("SHOW UI ");
+                        print(b);
+                        showUI = b;
+                      })),
+              LauncherView(showUI: showUI, videoViewKey: videoKey),
+              if (Platform.isWindows)
+                WindowTitleBarBox(
+                    child: Row(
+                  children: [Expanded(child: MoveWindow()), WindowButtons()],
+                ))
+            ],
+          ),
+        ));
   }
 }
-
-const sidebarColor = Color(0xFFF6A00C);
-
-class LeftSide extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-        width: 200,
-        child: Container(
-            color: sidebarColor,
-            child: Column(
-              children: [
-                WindowTitleBarBox(child: MoveWindow()),
-                Expanded(child: Container())
-              ],
-            )));
-  }
-}
-
-const backgroundStartColor = Color(0xFFFFD500);
-const backgroundEndColor = Color(0xFFF6A00C);
-
-class RightSide extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-        child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [backgroundStartColor, backgroundEndColor],
-                  stops: [0.0, 1.0]),
-            ),
-            child: Column(children: [
-              WindowTitleBarBox(
-                  child: Row(children: [
-                    Expanded(child: MoveWindow()),
-                    WindowButtons()
-                  ])),
-            ])));
-  }
-}
-
-final buttonColors = WindowButtonColors(
-    iconNormal: Color(0xFF805306),
-    mouseOver: Color(0xFFF6A00C),
-    mouseDown: Color(0xFF805306),
-    iconMouseOver: Color(0xFF805306),
-    iconMouseDown: Color(0xFFFFD500));
 
 final closeButtonColors = WindowButtonColors(
     mouseOver: Color(0xFFD32F2F),
     mouseDown: Color(0xFFB71C1C),
-    iconNormal: Color(0xFF805306),
+    iconNormal: Color(0xFFFFFFFF),
     iconMouseOver: Colors.white);
 
 class WindowButtons extends StatelessWidget {
@@ -109,9 +118,56 @@ class WindowButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        MinimizeWindowButton(colors: buttonColors),
-        MaximizeWindowButton(colors: buttonColors),
         CloseWindowButton(colors: closeButtonColors),
       ],
     );
-  }}
+  }
+}
+
+ThemeData defaultTheme = ThemeData(
+  brightness: Brightness.light,
+  appBarTheme: const AppBarTheme(backgroundColor: Colors.black),
+  scaffoldBackgroundColor: const Color(0xFF121212),
+  backgroundColor: const Color(0xFF121212),
+  primaryColor: Colors.black,
+/*  colorScheme: new ColorScheme(brightness: brightness,
+      primary: primary,
+      onPrimary: onPrimary,
+      secondary: secondary,
+      onSecondary: onSecondary,
+      error: error,
+      onError: onError,
+      background: background,
+      onBackground: onBackground,
+      surface: surface,
+      onSurface: onSurface),*/
+  accentColor: const Color(0xFFF74040),
+  iconTheme: const IconThemeData().copyWith(color: Colors.white),
+  fontFamily: 'Montserrat',
+  textTheme: TextTheme(
+    headline2: const TextStyle(
+      color: Colors.white,
+      fontSize: 32.0,
+      fontWeight: FontWeight.bold,
+    ),
+    headline4: TextStyle(
+      fontSize: 12.0,
+      color: Colors.grey[300],
+      fontWeight: FontWeight.w500,
+      letterSpacing: 2.0,
+    ),
+    bodyText1: TextStyle(
+      color: Colors.grey[300],
+      fontSize: 14.0,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 1.0,
+    ),
+    bodyText2: TextStyle(
+      color: Colors.grey[300],
+      letterSpacing: 1.0,
+    ),
+  ),
+);
+
+// UNINSTALL DIALOG
+//
