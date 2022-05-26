@@ -107,7 +107,6 @@ class VideoViewState extends State<VideoView> with WindowListener {
     player.play();
     //player.seek(Duration(seconds: 4));
     setShowUI(true);
-    //TODO show background
   }
 
   // downloading logic is handled by this method
@@ -127,7 +126,6 @@ class VideoViewState extends State<VideoView> with WindowListener {
     //  stdout.write(result.stdout);
     //  stderr.write(result.stderr);
     //});
-    //TODO Check version
   }
 
   //gets the applicationDirectory and path for the to-be downloaded file

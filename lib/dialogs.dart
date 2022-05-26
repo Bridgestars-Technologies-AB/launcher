@@ -2,8 +2,10 @@ import 'dart:io';
 
 import 'package:bridgestars_launcher/launcher.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 import 'package:settings_ui/settings_ui.dart';
+import 'launcherView.dart';
 import 'main.dart';
 
 Function showLoadingDialog(String text) {
@@ -159,7 +161,7 @@ showAppInfoDialog(Version? v, Function()? closeCallback) {
                     style:
                         TextStyle(fontSize: height / 35, color: Colors.white),
                   ),
-                  Container(height: height / 25),
+                  Container(height: height / 100),
                   Container(
                     constraints: BoxConstraints.expand(height: height / 3.5),
                     child: SingleChildScrollView(
@@ -172,6 +174,7 @@ showAppInfoDialog(Version? v, Function()? closeCallback) {
                                     fontSize: height / 40,
                                     color: Colors.white)))),
                   ),
+                  Container(height: height / 100),
                   ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         shape: StadiumBorder(
@@ -224,4 +227,47 @@ showAlertDialog(String title, String message, List<Text> btnTexts,
       );
     },
   );
+}
+
+Future showErrorRetryDialog(
+    {required LauncherView widget,
+    required String message,
+    String title = "Ops, Something went wrong"}) async {
+  if (widget.showUI) {
+    return await FlutterPlatformAlert.showCustomAlert(
+        positiveButtonTitle: "Try again",
+        windowTitle: title,
+        text: message,
+        iconStyle: IconStyle.error);
+  } else
+    return Future.delayed(Duration(milliseconds: 50)).then((v) =>
+        showErrorRetryDialog(message: message, title: title, widget: widget));
+}
+
+Future showCustomDialog(
+    {required LauncherView widget,
+    required String message,
+    String title = "Ops, Something went wrong",
+    String positiveButtonTitle = "",
+    String neutralButtonTitle = "",
+    String negativeButtonTitle = "",
+    IconStyle iconStyle = IconStyle.information}) async {
+  if (widget.showUI) {
+    return await FlutterPlatformAlert.showCustomAlert(
+        positiveButtonTitle: positiveButtonTitle,
+        neutralButtonTitle: neutralButtonTitle,
+        negativeButtonTitle: negativeButtonTitle,
+        windowTitle: title,
+        text: message,
+        iconStyle: iconStyle);
+  } else
+    return Future.delayed(Duration(milliseconds: 50)).then((v) =>
+        showCustomDialog(
+            widget: widget,
+            message: message,
+            title: title,
+            positiveButtonTitle: positiveButtonTitle,
+            neutralButtonTitle: negativeButtonTitle,
+            negativeButtonTitle: negativeButtonTitle,
+            iconStyle: iconStyle));
 }

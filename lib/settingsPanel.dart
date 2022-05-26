@@ -78,10 +78,10 @@ drawSettingsPanel(
                   description: Text(
                       'Does the game not work as expected? Try cleaning and reinstalling.'),
                   onPressed: (a) async {
-                    [
-                      LauncherState.downloading,
-                      LauncherState.installing,
-                      LauncherState.preparingUpdate
+                    ![
+                      LauncherState.canUpdate,
+                      LauncherState.canRun,
+                      LauncherState.canDownload
                     ].contains(launcher?.getState())
                         ? showAlertDialog(
                             "Download in progress",
@@ -150,8 +150,7 @@ drawSettingsPanel(
                       Icon(FontAwesomeIcons.discord, color: Color(0xFF8690f5)),
                   iconSize: height / 20,
                   onPressed: () {
-                    _launchUrl(
-                        "https://discord.com/invite/BmZce5wb?utm_source=Discord%20Widget&utm_medium=Connect");
+                    _launchUrl("https://discord.gg/YhwRDgtSX2");
                   },
                 ),
                 Spacer(flex: 1),
@@ -161,6 +160,14 @@ drawSettingsPanel(
                   iconSize: height / 20,
                   onPressed: () {
                     _launchUrl("https://www.instagram.com/bridgestars/");
+                  },
+                ),
+                Spacer(flex: 1),
+                IconButton(
+                  icon: Icon(FontAwesomeIcons.globe, color: Colors.blueAccent),
+                  iconSize: height / 20,
+                  onPressed: () {
+                    _launchUrl("https://bridgestars.net");
                   },
                 ),
                 Spacer(flex: 6),

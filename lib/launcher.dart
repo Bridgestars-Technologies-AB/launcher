@@ -95,8 +95,8 @@ class Launcher {
   }
 
   Future refreshAppVersion() async {
-    localAppVersion = await getLocalAppVersion();
     remoteAppVersion = await getRemoteAppVersion();
+    localAppVersion = await getLocalAppVersion();
     return;
   }
 
@@ -123,7 +123,6 @@ class Launcher {
 
       case LauncherState.canRun:
         await runApp();
-        //TODO: Hide window
         return LauncherState.running;
 
       case LauncherState.waiting:
@@ -179,7 +178,6 @@ class Launcher {
       throw new Exception("Executable not found");
   }
 
-  ///TODO not sure this works
   void _runWindowsExecutable(String path) {
     print("RUNNING");
     print(path);
@@ -247,7 +245,9 @@ class Launcher {
   Future install() async {
     await _unzip(getArchivePath(), getExtractDir());
     await updateExecutablePaths();
-    //TODO remove zip file
+    var f = new File(getArchivePath());
+    if (f.existsSync()) f.deleteSync();
+    return;
   }
 
   ///Should work on both mac and windows
@@ -413,12 +413,18 @@ class Launcher {
 //#endregion
 
   Future waitForGameClose() async {
+    var checkForUpdates = () async {
+      await refreshAppVersion();
+      await updateState();
+    };
     if (Platform.isMacOS) {
       var r = Process.runSync('ps', ['-e']);
       print(r.stderr.toString());
 
       if (!r.stdout.toString().contains(getGameDir())) {
-        print("GAME IS NOT RUNNING ANYMORE: Opening");
+        print(
+            "GAME IS NOT RUNNING ANYMORE: Opening and checking for new updates");
+        checkForUpdates();
         return;
       }
     } else if (Platform.isWindows) {
@@ -428,7 +434,10 @@ class Launcher {
       print(r.stderr.toString());
       print(r.stdout.toString());
       if (!r.stdout.toString().contains("Bridgestars.exe")) {
-        print("GAME IS NOT RUNNING ANYMORE: Opening");
+        print(
+            "GAME IS NOT RUNNING ANYMORE: Opening and checking for new updates");
+
+        checkForUpdates();
         return;
       }
     }

@@ -50,7 +50,6 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
       launcher = await Launcher.create(setLauncherState);
       print('Game Dir: "' + launcher!.getGameDir().toString() + '"');
 
-      //TODO REMOVE THIS
       if (Platform.isWindows) {
         // var res = await Process.run(
         //     "cd",
@@ -106,18 +105,6 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
 
   String getExceptionMessage(e) =>
       e.toString().substring(e.toString().indexOf(':') + 1);
-
-/*  void OpenErrorModal(String message, List<String> btnTexts,
-      List<Function()> btnActions) async {
-    if (widget.showUI) {
-      var m = message.substring(message.indexOf(':') + 1);
-      //TODO add report btn
-      showAlertDialog("Ops, Something went wrong", m,
-          btnTexts.map((s) => Text(s)).toList(), btnActions);
-    } else
-      Future.delayed(Duration(milliseconds: 50))
-          .then((v) => OpenErrorModal(message, btnTexts, btnActions));
-  }*/
 
   void setLauncherState(LauncherState s, DownloadInfo? p) => setState(() {
         launcherState = s;
@@ -283,7 +270,6 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
 }
 
 String getLauncherStateString(LauncherState s, Launcher? launcher) {
-  String v = launcher?.localAppVersion?.getDisplayValue() ?? "";
   switch (s) {
     case LauncherState.canDownload:
       return " DOWNLOAD ";
@@ -294,13 +280,15 @@ String getLauncherStateString(LauncherState s, Launcher? launcher) {
     case LauncherState.waiting:
       return "Waiting";
     case LauncherState.downloading:
-      return "Downloading " + v;
+      return "Downloading " +
+          (launcher?.localAppVersion?.getDisplayValue() ?? "");
     case LauncherState.installing:
       return "Installing";
     case LauncherState.uninstalling:
       return "Uninstalling";
     case LauncherState.updating:
-      return "Updating to " + v;
+      return "Updating to " +
+          (launcher?.remoteAppVersion?.getDisplayValue() ?? "");
     case LauncherState.running:
       return "Running";
     case LauncherState.connecting:
@@ -308,47 +296,4 @@ String getLauncherStateString(LauncherState s, Launcher? launcher) {
     case LauncherState.preparingUpdate:
       return "Preparing update";
   }
-}
-
-Future showErrorRetryDialog(
-    {required LauncherView widget,
-    required String message,
-    String title = "Ops, Something went wrong"}) async {
-  if (widget.showUI) {
-    return await FlutterPlatformAlert.showCustomAlert(
-        positiveButtonTitle: "Try again",
-        windowTitle: title,
-        text: message,
-        iconStyle: IconStyle.error);
-  } else
-    return Future.delayed(Duration(milliseconds: 50)).then((v) =>
-        showErrorRetryDialog(message: message, title: title, widget: widget));
-}
-
-Future showCustomDialog(
-    {required LauncherView widget,
-    required String message,
-    String title = "Ops, Something went wrong",
-    String positiveButtonTitle = "",
-    String neutralButtonTitle = "",
-    String negativeButtonTitle = "",
-    IconStyle iconStyle = IconStyle.information}) async {
-  if (widget.showUI) {
-    return await FlutterPlatformAlert.showCustomAlert(
-        positiveButtonTitle: positiveButtonTitle,
-        neutralButtonTitle: neutralButtonTitle,
-        negativeButtonTitle: negativeButtonTitle,
-        windowTitle: title,
-        text: message,
-        iconStyle: iconStyle);
-  } else
-    return Future.delayed(Duration(milliseconds: 50)).then((v) =>
-        showCustomDialog(
-            widget: widget,
-            message: message,
-            title: title,
-            positiveButtonTitle: positiveButtonTitle,
-            neutralButtonTitle: negativeButtonTitle,
-            negativeButtonTitle: negativeButtonTitle,
-            iconStyle: iconStyle));
 }
