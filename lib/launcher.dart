@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:bridgestars_launcher/dialogs.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -329,6 +330,24 @@ class Launcher {
       speedMBs = calcSpeed(rcv);
       secondsLeft = ((total - rcv) / speedMBs) / 1e6;
     }
+
+    var singleUseDownloadLink = "";
+    await Dio().get(uri).then((value) {
+      print(value.data.toString());
+      var text = value.data.toString();
+      var searchTerm = "https://cdn";
+      if (!text.contains(searchTerm)) {
+        _setState(LauncherState.canDownload);
+        throw new Exception(
+            "Can't establish a valid connection, please report this issue.");
+      }
+      text = text.substring(text.indexOf(searchTerm));
+      singleUseDownloadLink = text.substring(0, text.indexOf(' '));
+    });
+
+    print(singleUseDownloadLink);
+
+    throw new Exception("testing");
 
     await Dio().download(
       uri,
