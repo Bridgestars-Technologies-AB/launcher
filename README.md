@@ -17,6 +17,7 @@ A launcher for the Bridgestars unity application.
 
 
 ## Guidelines
-- rename the executable to `Bridgestars.exe`/`Bridgestars.app` name the `.zip` file to `Bridgestars for Mac.zip`/`Bridgestars for Windows.zip`
+- rename the executable to `Bridgestars.exe`/`Bridgestars.app` 
+- rename the `.zip` file to `Bridgestars for Mac.zip`/`Bridgestars for Windows.zip`
 
 
