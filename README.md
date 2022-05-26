@@ -16,3 +16,7 @@ A launcher for the Bridgestars unity application.
 3. Follow the guide at [flutter_docs](https://docs.flutter.dev/desktop/windows#building-your-own-zip-file-for-windows)
 
 
+## Guidelines
+- rename the executable to `Bridgestars.exe`/`Bridgestars.app` name the `.zip` file to `Bridgestars for Mac.zip`/`Bridgestars for Windows.zip`
+
+
