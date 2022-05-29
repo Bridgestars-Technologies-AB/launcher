@@ -21,9 +21,9 @@ A launcher for the Bridgestars unity application.
 - rename the `.zip` file to `Bridgestars for Mac.zip`/`Bridgestars for Windows.zip`
 - when getting the download link from drive it will be formatted as. 
 ```
-https: //drive.google.com/u/5/uc?id=1qSzWRZXDv4F66xLanSIcXmGeWWltTTkl&export=download
+https://drive.google.com/file/d/{id}/view
 But the direct download link is:
-https://drive.google.com/file/d/1qSzWRZXDv4F66xLanSIcXmGeWWltTTkl/view?confirm=t
+https://drive.google.com/u/0/uc?id={id}&export=download&confirm=t
 ```
 
 I will later create a tool to generate that link.
