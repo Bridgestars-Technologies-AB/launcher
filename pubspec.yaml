@@ -1,4 +1,4 @@
-name: bridgestars_launcher
+name: bridgestars
 description: A launcher for the Bridgestars unity application.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -19,10 +19,10 @@ dependencies:
   dio: ^4.0.6
   path_provider: ^2.0.9
   archive: ^3.3.0
-  flutter_easyloading: ^3.0.3
+  #flutter_easyloading: ^3.0.3
   dart_vlc: ^0.2.0
-  liquid_progress_indicator: ^0.4.0
-  flutter_spinkit: ^5.1.0
+  #liquid_progress_indicator: ^0.4.0
+  #flutter_spinkit: ^5.1.0
   loading_indicator: ^3.0.3
   flutter_platform_alert: ^0.2.2
   bitsdojo_window: ^0.1.1+1
