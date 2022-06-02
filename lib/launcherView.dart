@@ -2,18 +2,10 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:bridgestars_launcher/main.dart';
-import 'package:bridgestars_launcher/settingsPanel.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:bridgestars/settingsPanel.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_platform_alert/flutter_platform_alert.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:loading_indicator/loading_indicator.dart';
-import 'package:settings_ui/settings_ui.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'launcher.dart';
 import 'videoView.dart';

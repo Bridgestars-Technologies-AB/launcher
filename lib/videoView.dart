@@ -1,8 +1,6 @@
 import 'package:dart_vlc/dart_vlc.dart';
 import 'package:flutter/material.dart';
-import 'package:loading_indicator/loading_indicator.dart';
 import 'package:window_manager/window_manager.dart';
-import 'dart:io';
 
 class VideoView extends StatefulWidget {
   final Function(bool) onShowUIChanged;

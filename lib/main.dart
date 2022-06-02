@@ -1,20 +1,15 @@
 import 'dart:io';
-import 'dart:ui';
 
 //import 'package:desktop_window/desktop_window.dart';
-import 'package:bridgestars_launcher/videoView.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:bridgestars/videoView.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:bridgestars_launcher/launcher.dart';
 import 'package:dart_vlc/dart_vlc.dart';
-import 'package:flutter/widgets.dart';
 import 'package:window_manager/window_manager.dart';
 
 //import 'package:liquid_progress_indicator/liquid_progress_indicator.dart';
 //import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:loading_indicator/loading_indicator.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 
 import 'launcherView.dart';
