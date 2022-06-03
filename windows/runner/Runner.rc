@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "bridgestars_launcher" "\0"
+            VALUE "CompanyName", "Bridgestars Technologies Sweden AB" "\0"
+            VALUE "FileDescription", "A launcher for the Bridgestars Unity application." "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "bridgestars_launcher" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2022 com.example. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2022 Bridgestars Technologies Sweden AB, All rights reserved." "\0"
             VALUE "OriginalFilename", "bridgestars_launcher.exe" "\0"
-            VALUE "ProductName", "bridgestars_launcher" "\0"
+            VALUE "ProductName", "bridgestars" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
