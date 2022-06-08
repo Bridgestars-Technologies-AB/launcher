@@ -60,12 +60,12 @@ flutter:
 msix_config:
   display_name: Bridgestars
   publisher_display_name: Bridgestars Technologies
-  publisher: CN=7C741E7A-7CEB-4D0A-A8E3-90483C44E39D, O=Bridgestars Technologies, L=Stockholm, S=Stockholm, C=SE
-  identity_name: BridgestarsTechnologies.Bridgestars
+  publisher: CN=7C741E7A-7CEB-4D0A-A8E3-90483C44E39D
+  identity_name: BridgestarsTechnologies.bridgestarstemp
   msix_version: 1.0.0.0
   logo_path: .\assets\logo.jpg
   start_menu_icon_path: .\assets\logo.jpg
   tile_icon_path: .\assets\logo.jpg
   icons_background_color: '#000000'
-  # store: true
+  store: true
   capabilities: internetClient, location, microphone, webcam
