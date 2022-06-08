@@ -58,10 +58,10 @@ flutter:
 
 
 msix_config:
-  display_name: Bridgestar Application
+  display_name: Bridgestars
   publisher_display_name: Bridgestars Technologies
-  publisher: CN=Bridgestars Technologies, O=Bridgestars Technologies, L=Stockholm, S=Stockholm, C=SE
-  identity_name: company.suite.flutterapp
+  publisher: CN=7C741E7A-7CEB-4D0A-A8E3-90483C44E39D, O=Bridgestars Technologies, L=Stockholm, S=Stockholm, C=SE
+  identity_name: BridgestarsTechnologies.Bridgestars
   msix_version: 1.0.0.0
   logo_path: .\assets\logo.jpg
   start_menu_icon_path: .\assets\logo.jpg
