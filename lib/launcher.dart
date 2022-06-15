@@ -77,7 +77,9 @@ class Launcher {
       Function(LauncherState, DownloadInfo?) listener) async {
     var l = new Launcher._(listener);
     //paths
-    l.root = (await getApplicationSupportDirectory()).path;
+    
+    l.root = Platform.isWindows ? Directory.current.path
+      : (await getApplicationSupportDirectory()).path;
     Directory(l.getExtractDir()).createSync();
     l.updateExecutablePaths();
 
@@ -181,7 +183,7 @@ class Launcher {
     var dirPath = path.split('\\');
     var exeName = dirPath.removeLast();
     var result = Process.runSync(
-        'cd', [dirPath.join('\\'), '&&', 'start', exeName],
+        'cd', [dirPath.join('\\'), '&qw&', 'start', exeName],
         runInShell: true);
     print(result.stdout);
     print(result.stderr);
