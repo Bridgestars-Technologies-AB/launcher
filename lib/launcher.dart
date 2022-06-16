@@ -80,6 +80,7 @@ class Launcher {
     
     l.root = Platform.isWindows ? Directory.current.path
       : (await getApplicationSupportDirectory()).path;
+      
     Directory(l.getExtractDir()).createSync();
     l.updateExecutablePaths();
 
