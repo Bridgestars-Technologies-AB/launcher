@@ -71,7 +71,9 @@ String? canonicalizePubspecPath(String? relativePath) {
 }
 
 String? generateSigningParams(String? certificateFile) {
-  final certPass = Platform.environment['SQUIRREL_CERT_PASSWORD'];
+  final certPass = "password";
+  Platform.environment['SQUIRREL_CERT_PASSWORD'];
+  print("ENVIRONMENTAL CERTIFICATE VARIABLE: ${certPass?.length.toString()}");
   final overrideParams =
       Platform.environment['SQUIRREL_OVERRIDE_SIGNING_PARAMS'];
 
@@ -83,10 +85,10 @@ String? generateSigningParams(String? certificateFile) {
     if (certificateFile == null) return null;
 
     throw Exception(
-        'You must set either the SQUIRREL_CERT_PASSWORD or the SQUIRREL_OVERRIDE_SIGNING_PARAMS environment variable');
+        'You must set either the SQUIRREL_CERT_PASSWORD or the SQUIRREL_OVERRIDE_SIGNING_PARAMS environment variable with');
   }
 
-  return '/a /f \"$certificateFile\" /p $certPass /v /fd sha256 /tr http://timestamp.digicert.com /td sha256';
+  return '/a /f \"$certificateFile\" /p $certPass /v /fd sha256 /tr http://timestamp.digicert.com /td sha256 /n "Bridgestars Technologies Sweden AB"';
 }
 
 const defaultUninstallPngUrl = 'https://fill/in/this/later';

@@ -1,8 +1,9 @@
 main:
-	echo "available commands: run_dev, build_windows, build_mac, release_windows"
+	echo "available commands: build_windows, build_mac, run" 
 dev:
 	flutter run
 build_windows:
-	flutter run --dart-define=SQUIRREL_CERT_PASSWORD=$(PASS) -t installer_windows.dart
+	echo "PASS=your_password"
+	flutter run -t installer_windows.dart --dart-define=SQUIRREL_CERT_PASSWORD=$(PASS)
 build_mac:
 	flutter build macos

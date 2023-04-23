@@ -63,7 +63,7 @@ flutter:
 
 squirrel:
   windows:
-    certificateFile: "~/Desktop/certs/certificate.pfx"
+    certificateFile: "vendor/certificate.pfx"
     # overrideSigningParameters: "bar"
     loadingGif: "vendor/loading.gif"
     appIcon: "vendor/app_icon.ico"
