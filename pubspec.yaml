@@ -1,5 +1,6 @@
-name: bridgestars
+name: bridgestars_launcher
 description: A launcher for the Bridgestars unity application.
+authors: Bridgestars Technologies Sweden AB
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
@@ -29,12 +30,15 @@ dependencies:
   settings_ui: ^2.0.2
   font_awesome_flutter: ^10.1.0
   url_launcher: ^6.1.2
+  squirrel: ^0.1.0
+  jinja: ^0.3.4
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   msix: ^3.6.2
+
 
 
   
@@ -55,6 +59,22 @@ flutter:
           weight: 600
         - asset: fonts/Montserrat-Bold.ttf
           weight: 700
+
+
+squirrel:
+  windows:
+    certificateFile: "~/Desktop/certs/certificate.pfx"
+    # overrideSigningParameters: "bar"
+    loadingGif: "vendor/loading.gif"
+    appIcon: "vendor/app_icon.ico"
+    # uninstallIconPngUrl: "vendor/app_icon.ico"
+    appFriendlyName: "Bridgestars"
+    appDescription: "The Bridgestars App"
+    setupIcon: "vendor/app_icon.ico"
+    releaseDirectory: "release/windows"
+    releaseUrl: "https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher"
+    buildEnterpriseMsiPackage: false
+    dontBuildDeltas: false 
 
 
 msix_config:

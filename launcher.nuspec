@@ -2,7 +2,7 @@
 <package >
     <metadata minClientVersion="2.5">
             <!-- Required elements-->
-        <id>bridgestars-launcher</id>
+        <id>bridgestarslauncher</id>
         <title>Bridgestars</title>
         <version>1.1.0</version>
         <description>This is the installer and launcher for the Bridgestars app.</description>
@@ -14,7 +14,7 @@
     </metadata>
     <files>
         <!-- Include everything in \build -->
-        <file src="build\windows\runner\Release\**" target="build\" />
+        <file src="build\windows\runner\Release\**" target="lib\net45" />
 <!--  ADD ICON FILE        -->
         <!-- <file src="build\windows\runner\Release\**" target="images\" /> -->
 

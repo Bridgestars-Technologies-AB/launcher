@@ -3,14 +3,6 @@ main:
 dev:
 	flutter run
 build_windows:
-	flutter build windows
+	flutter run --dart-define=SQUIRREL_CERT_PASSWORD=$(PASS) -t installer_windows.dart
 build_mac:
 	flutter build macos
-
-release_windows:
-	flutter clean
-	flutter pub get
-	flutter build windows
-
-pack:
-	nuget pack -OutputDirectory "release/windows/" launcher.nuspec
