@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package >
+    <metadata minClientVersion="2.5">
+            <!-- Required elements-->
+        <id>bridgestars-launcher</id>
+        <title>Bridgestars</title>
+        <version>1.1.0</version>
+        <description>This is the installer and launcher for the Bridgestars app.</description>
+        <authors>Bridgestars Technologies Sweden AB</authors>
+        <!-- <authors>Bridgestars Technologies Sweden AB</authors> -->
+        <!-- <icon></icon> -->
+        <!-- <language></language> -->
+        
+    </metadata>
+    <files>
+        <!-- Include everything in \build -->
+        <file src="build\windows\runner\Release\**" target="build\" />
+<!--  ADD ICON FILE        -->
+        <!-- <file src="build\windows\runner\Release\**" target="images\" /> -->
+
+        <!-- Other files -->
+        <!-- ... -->
+    </files>
+</package>

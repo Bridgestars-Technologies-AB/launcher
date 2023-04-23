@@ -24,7 +24,7 @@ void main() async {
   if (!kIsWeb &&
       (Platform.isMacOS || Platform.isLinux || Platform.isWindows)) {}
 
-  await DartVLC.initialize();
+  DartVLC.initialize();
 
   if (Platform.isWindows)
     doWhenWindowReady(() {

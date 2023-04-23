@@ -1,3 +1,9 @@
+# added
+game/
+build/
+release/
+
+
 # Miscellaneous
 *.class
 *.log

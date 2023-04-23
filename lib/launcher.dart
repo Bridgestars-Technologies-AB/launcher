@@ -77,10 +77,11 @@ class Launcher {
       Function(LauncherState, DownloadInfo?) listener) async {
     var l = new Launcher._(listener);
     //paths
-    
-    l.root = Platform.isWindows ? Directory.current.path
-      : (await getApplicationSupportDirectory()).path;
-      
+
+    l.root = Platform.isWindows
+        ? Directory.current.path
+        : (await getApplicationSupportDirectory()).path;
+
     Directory(l.getExtractDir()).createSync();
     l.updateExecutablePaths();
 
@@ -221,10 +222,10 @@ class Launcher {
 
   Future<String?> _findWindowsExecutable(String folderPath) async {
     var dir = Directory(folderPath).listSync(recursive: true).toList();
-    print(folderPath);
-    dir.forEach((element) {
-      print(element);
-    });
+    print("Finding windows executable in: " + folderPath);
+    // dir.forEach((element) {
+    //   print(element);
+    // });
     var exe = dir
         .map((e) => e.path)
         .firstWhere((e) => e.endsWith('Bridgestars.exe'), orElse: () => '');
@@ -243,6 +244,9 @@ class Launcher {
 
 //#region install
   Future install() async {
+    //TODO unzip in background thread
+    //start new thread
+
     await _unzip(getArchivePath(), getExtractDir());
     await updateExecutablePaths();
     var f = new File(getArchivePath());
@@ -261,12 +265,19 @@ class Launcher {
       for (var file in archive) {
         var fileName = '$unzipPath/${file.name}';
         if (file.isFile) {
+          //start timer
+          var start = DateTime.now();
+          await Future.delayed(Duration(milliseconds: 1));
           var outFile = File(fileName);
           //_tempImages.add(outFile.path);
           if (!fileName.contains('__MACOSX')) {
             outFile = await outFile.create(recursive: true);
             await outFile.writeAsBytes(file.content);
           }
+          var end = DateTime.now();
+          var diff = end.difference(start).inMilliseconds;
+          print(
+              "Time to extract: " + diff.toString() + "ms, name: " + file.name);
         }
       }
     } catch (e, stacktrace) {
