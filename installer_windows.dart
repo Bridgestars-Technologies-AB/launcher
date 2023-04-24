@@ -71,9 +71,12 @@ String? canonicalizePubspecPath(String? relativePath) {
 }
 
 String? generateSigningParams(String? certificateFile) {
-  final certPass = "password";
-  Platform.environment['SQUIRREL_CERT_PASSWORD'];
-  print("ENVIRONMENTAL CERTIFICATE VARIABLE: ${certPass?.length.toString()}");
+  print("reading password from certpass.txt");
+  var passFile = new File(path.join(appDir, 'certpass.txt'));
+  final certPass = passFile.readAsLinesSync().first.trim();
+  print("delete password file");
+  passFile.deleteSync();
+
   final overrideParams =
       Platform.environment['SQUIRREL_OVERRIDE_SIGNING_PARAMS'];
 
@@ -276,10 +279,9 @@ Future<int> main(List<String> args) async {
       (await tmpDir.list().firstWhere((f) => f.path.contains('.nupkg'))).path;
 
   // Prepare the release directory
-  final releaseDir =
-      Directory(path.join(pubspec.releaseDirectory, pubspec.version));
+  final releaseDir = new Directory(pubspec.releaseDirectory);
   if (await releaseDir.exists()) {
-    await releaseDir.delete(recursive: true);
+    //await releaseDir.delete(recursive: true);
   }
 
   await releaseDir.create(recursive: true);
@@ -298,8 +300,8 @@ SQUIRREL_I_KNOW_THAT_USING_HTTP_URLS_IS_REALLY_BAD to 'I hereby promise.'
 ''');
     }
 
-    // await runUtil(
-    //    'SyncReleases.exe', ['-r', releaseDir.path, '-u', pubspec.releaseUrl!]);
+    await runUtil(
+        'SyncReleases.exe', ['-r', releaseDir.path, '-u', pubspec.releaseUrl!]);
   }
 
   // Releasify!
