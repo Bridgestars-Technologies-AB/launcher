@@ -1,4 +1,5 @@
-import 'package:dart_vlc/dart_vlc.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -19,6 +20,43 @@ class VideoView extends StatefulWidget {
 }
 
 class VideoViewState extends State<VideoView> with WindowListener {
+  final Player player = Player();
+  VideoController? controller;
+
+  bool showUI = false;
+
+  void setShowUI(bool b) {
+    setState(() {
+      showUI = b;
+    });
+    widget.onShowUIChanged(b);
+  }
+
+  Future playOutroAndHide(Function? startGameCallback) async {
+    setShowUI(false);
+    await player.open(Media('asset:///assets/shortOutro.mov'), play: true);
+    // await player.setRate(-1.0);
+    // await player.play();
+    await Future.delayed(const Duration(milliseconds: 1000), () {});
+    await player.pause();
+    if (startGameCallback != null) startGameCallback();
+    await Future.delayed(const Duration(milliseconds: 200), () {});
+    //await windowManager.minimize();
+    await Future.delayed(const Duration(milliseconds: 4000), () {});
+    //await showWithBackground();
+    // await windowManager.setSkipTaskbar(false);
+  }
+
+  Future showWithBackground() async {
+    // await windowManager.show();
+    await player.open(
+      Media('asset:///assets/shortIntro.mov'),
+    );
+    player.play();
+    //player.seek(Duration(seconds: 4));
+    setShowUI(true);
+  }
+
   //#region events
   @override
   void onWindowFocus() {
@@ -30,114 +68,57 @@ class VideoViewState extends State<VideoView> with WindowListener {
   @override
   void initState() {
     windowManager.addListener(this);
-    _init();
     super.initState();
+    Future.microtask(() async {
+      /// Create a [VideoController] to show video output of the [Player].
+      controller = await VideoController.create(player);
+      await windowManager.setPreventClose(true);
+      await player.open(Media('asset://assets/shortIntro.mov'));
+
+      setState(() {
+        showUI = false;
+      });
+      await player.play();
+      Future.delayed(const Duration(milliseconds: 2500), () {})
+          .then((value) async {
+        await player.pause();
+        setShowUI(true);
+      });
+    }); // Add this line to override the default close handler
   }
 
   @override
   void dispose() {
     windowManager.removeListener(this);
+    Future.microtask(() async {
+      /// Release allocated resources back to the system.
+      await controller?.dispose();
+      await player.dispose();
+    });
     super.dispose();
   }
 
   @override
   void onWindowEvent(String eventName) {
-    print('[WindowManager] onWindowEvent: $eventName');
+    // print('[WindowManager] onWindowEvent: $eventName');
   }
 
   @override
   void onWindowClose() async {
     bool _isPreventClose = await windowManager.isPreventClose();
     if (_isPreventClose) {
-      print("STOPPING");
       if (showUI) {
-        player.stop();
-        await playOutroAndHide();
+        player.pause();
+        await playOutroAndHide(null);
       }
-      player.stop();
-      await windowManager.destroy();
+      // await Future.delayed(const Duration(milliseconds: 2000), () {});
+      await windowManager.close();
     }
   }
 
   //#endregion
-
-  void _init() async {
-    // Add this line to override the default close handler
-    await windowManager.setPreventClose(true);
-    await setup();
-    //add constructor
-  }
-
-  bool showUI = false;
-
-  void setShowUI(bool b) {
-    setState(() {
-      showUI = b;
-    });
-    widget.onShowUIChanged(b);
-  }
-
-  var player = Player(id: 124135);
-
-  void showUIWhenVideoDone() async {
-    await Future.delayed(const Duration(milliseconds: 2500), () {});
-    setShowUI(true);
-  }
-
-  Future playOutroAndHide() async {
-    setShowUI(false);
-    player.open(
-      Media.asset('assets/shortOutro.mov'),
-    );
-    await Future.delayed(const Duration(milliseconds: 850), () {});
-    //player.stop();
-    await windowManager.hide();
-    await windowManager.setSkipTaskbar(true);
-  }
-
-  Future showWithBackground() async {
-    await windowManager.show();
-    await windowManager.focus();
-    await windowManager.setSkipTaskbar(false);
-    player.open(
-      Media.asset('assets/shortIntro.mov'),
-    );
-    player.play();
-    //player.seek(Duration(seconds: 4));
-    setShowUI(true);
-  }
-
-  // downloading logic is handled by this method
-
-  Future setup() async {
-    print("setup");
-    player.open(
-      Media.asset('assets/shortIntro.mov'),
-    );
-    Future.delayed(const Duration(milliseconds: 2500), () {})
-        .then((value) => player.stop());
-    showUIWhenVideoDone();
-    //stopVideoWhenDone();
-    //launcher = await Launcher.create(setLauncherState);
-    //var l  = launcher!;
-    //await Process.run('open', ["-a", "finder", l.root]).then((result) {
-    //  stdout.write(result.stdout);
-    //  stderr.write(result.stderr);
-    //});
-  }
-
-  //gets the applicationDirectory and path for the to-be downloaded file
-
-  // which will be used to save the file to that path in the downloadFile method
-
   @override
   Widget build(BuildContext context) {
-    return Video(
-      player: player,
-      //height: 360,
-      //width: 640,
-      scale: 1.0, // default
-      showControls: false, // default
-    );
+    return Video(controller: controller);
   }
 }
