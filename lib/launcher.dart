@@ -126,7 +126,7 @@ class Launcher {
         break;
 
       case LauncherState.canRun:
-        await runApp();
+        runApp();
         return LauncherState.running;
 
       case LauncherState.canInstall:

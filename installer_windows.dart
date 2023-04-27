@@ -196,6 +196,7 @@ class PubspecParams {
 Future<ProcessResult> runUtil(String name, List<String> args,
     {String? cwd}) async {
   final cmd = path.join(appDir, 'vendor', name);
+  print("running $cmd ${args.join(' ')}");
   final ret = await Process.run(cmd, args, workingDirectory: cwd);
 
   if (ret.exitCode != 0) {
