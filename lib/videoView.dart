@@ -112,8 +112,8 @@ class VideoViewState extends State<VideoView> with WindowListener {
         await playOutroAndHide(null);
       }
       // await Future.delayed(const Duration(milliseconds: 2000), () {});
-      await windowManager.close();
     }
+    await windowManager.close();
   }
 
   //#endregion
