@@ -16,22 +16,10 @@ import 'videoView.dart';
 
 import 'package:media_kit/media_kit.dart';
 
-import 'package:sentry_flutter/sentry_flutter.dart';
-
 late final navigatorKey = GlobalKey<NavigatorState>();
 GlobalKey<VideoViewState> videoKey = GlobalKey();
 
 void main() async {
-  await SentryFlutter.init((options) {
-    options.dsn =
-        'https://0fa41ac90dce42e8af98c5b60d24ee7a@o4505084744433664.ingest.sentry.io/4505086445027328';
-    // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
-    // We recommend adjusting this value in production.
-    options.tracesSampleRate = 0.05;
-  }, appRunner: init);
-}
-
-void init() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
   if (!kIsWeb &&

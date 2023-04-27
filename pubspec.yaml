@@ -1,27 +1,27 @@
-name: bridgestars_launcher
+name: bridgestars
 description: A launcher for the Bridgestars unity application.
 authors: Bridgestars Technologies Sweden AB
 
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 version: 1.1.2 
 
 environment:
-  sdk: '>=2.16.0 <3.0.0'
+  sdk: ">=2.16.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
 
   #desktop_window: ^0.4.0
-  window_manager: ^0.3.2
+  window_manager: ^0.2.3
   provider: ^6.0.5
   http: ^0.13.4
   dio: ^5.1.1
   path_provider: ^2.0.9
   archive: ^3.3.0
   #flutter_easyloading: ^3.0.3
-  dart_vlc: ^0.4.0
+  #dart_vlc: ^0.2.1
   #liquid_progress_indicator: ^0.4.0
   #flutter_spinkit: ^5.1.0
   loading_indicator: ^3.0.3
@@ -32,16 +32,24 @@ dependencies:
   url_launcher: ^6.1.2
   squirrel: ^0.1.0
   jinja: ^0.3.4
+  path: ^1.8.2
+  sentry_flutter: ^7.5.0
 
+  media_kit: ^0.0.6 # Primary package.
+  media_kit_video: ^0.0.8 # For video rendering.
+  media_kit_native_event_loop: ^1.0.3 # Support for higher number of concurrent instances & better performance.
+  media_kit_libs_macos_video: ^1.0.4 # macOS package for video native libraries.
+  media_kit_libs_windows_video: ^1.0.2 # Windows package for video native libraries.
+  media_kit_libs_linux:
+    ^1.0.2 # GNU/Linux dependency package.
+    #media_kit_libs_android_video: ^1.0.1           # Android package for video native libraries.
+    #media_kit_libs_ios_video: ^1.0.4               # iOS package for video native libraries.
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   msix: ^3.6.2
 
-
-
-  
 flutter:
   uses-material-design: true
 
@@ -60,7 +68,6 @@ flutter:
         - asset: fonts/Montserrat-Bold.ttf
           weight: 700
 
-
 squirrel:
   windows:
     certificateFile: "vendor/certificate.pfx"
@@ -74,8 +81,7 @@ squirrel:
     releaseDirectory: "release/windows"
     releaseUrl: "https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher/win"
     buildEnterpriseMsiPackage: false
-    dontBuildDeltas: false 
-
+    dontBuildDeltas: false
 
 msix_config:
   display_name: Bridgestars
@@ -86,6 +92,6 @@ msix_config:
   logo_path: .\assets\logo.jpg
   start_menu_icon_path: .\assets\logo.jpg
   tile_icon_path: .\assets\logo.jpg
-  icons_background_color: '#000000'
+  icons_background_color: "#000000"
   store: true
   capabilities: internetClient, location, microphone, webcam

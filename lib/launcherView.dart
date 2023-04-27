@@ -80,11 +80,12 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
           _handleBtnPress();
           return;
         } else {
-          await widget.videoViewKey.currentState?.playOutroAndHide();
-          await launcher?.handleBtnPress();
-          await Future.delayed(Duration(seconds: 1));
-          await launcher?.waitForGameClose();
+          await widget.videoViewKey.currentState
+              ?.playOutroAndHide(() => launcher?.handleBtnPress());
           await widget.videoViewKey.currentState?.showWithBackground();
+          // await Future.delayed(Duration(seconds: 1));
+          // // await launcher?.waitForGameClose();
+          // await widget.videoViewKey.currentState?.showWithBackground();
         }
       } else
         await launcher?.handleBtnPress();
@@ -107,7 +108,8 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
         showBtn = [
           LauncherState.canRun,
           LauncherState.canDownload,
-          LauncherState.canUpdate
+          LauncherState.canUpdate,
+          LauncherState.canInstall
         ].contains(s);
       });
 
@@ -267,6 +269,8 @@ String getLauncherStateString(LauncherState s, Launcher? launcher) {
   switch (s) {
     case LauncherState.canDownload:
       return " DOWNLOAD ";
+    case LauncherState.canInstall:
+      return " INSTALL ";
     case LauncherState.canUpdate:
       return " UPDATE ";
     case LauncherState.canRun:
