@@ -4,7 +4,7 @@ authors: Bridgestars Technologies Sweden AB
 
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
-version: 1.1.0
+version: 1.1.2 
 
 environment:
   sdk: ">=2.16.0 <4.0.0"
@@ -79,7 +79,7 @@ squirrel:
     appDescription: "The Bridgestars App"
     setupIcon: "vendor/app_icon.ico"
     releaseDirectory: "release/windows"
-    releaseUrl: "https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher"
+    releaseUrl: "https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher/win"
     buildEnterpriseMsiPackage: false
     dontBuildDeltas: false
 
