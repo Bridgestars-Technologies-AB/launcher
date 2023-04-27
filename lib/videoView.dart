@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:flutter/material.dart';
@@ -39,16 +41,22 @@ class VideoViewState extends State<VideoView> with WindowListener {
     // await player.play();
     await Future.delayed(const Duration(milliseconds: 1000), () {});
     await player.pause();
-    if (startGameCallback != null) startGameCallback();
-    await Future.delayed(const Duration(milliseconds: 200), () {});
-    //await windowManager.minimize();
-    await Future.delayed(const Duration(milliseconds: 4000), () {});
+    if (startGameCallback != null) {
+      // if (Platform.isWindows)
+      // await windowManager.setSkipTaskbar(false);
+      // await windowManager.minimize();
+      if (Platform.isWindows) await windowManager.hide();
+      Future.microtask(() async => startGameCallback());
+    }
+    // await Future.delayed(const Duration(milliseconds: 200), () {});
+    // await Future.delayed(const Duration(milliseconds: 4000), () {});
     //await showWithBackground();
     // await windowManager.setSkipTaskbar(false);
   }
 
   Future showWithBackground() async {
-    // await windowManager.show();
+    await windowManager.show();
+    await windowManager.setSkipTaskbar(false);
     await player.open(
       Media('asset:///assets/shortIntro.mov'),
     );
@@ -108,12 +116,20 @@ class VideoViewState extends State<VideoView> with WindowListener {
     bool _isPreventClose = await windowManager.isPreventClose();
     if (_isPreventClose) {
       if (showUI) {
-        player.pause();
-        await playOutroAndHide(null);
+        if (player.state.playing) player.pause();
+        await playOutroAndHide(() async {
+          await windowManager.setPreventClose(false);
+          dispose();
+          await windowManager.close();
+        });
+      } else {
+        dispose();
+        await windowManager.setPreventClose(false);
+        await windowManager.close();
       }
       // await Future.delayed(const Duration(milliseconds: 2000), () {});
-    }
-    await windowManager.close();
+    } else
+      await windowManager.close();
   }
 
   //#endregion

@@ -27,7 +27,7 @@ void main() async {
         'https://0fa41ac90dce42e8af98c5b60d24ee7a@o4505084744433664.ingest.sentry.io/4505086445027328';
     // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
     // We recommend adjusting this value in production.
-    options.tracesSampleRate = 0.05;
+    options.tracesSampleRate = 1.0;
   }, appRunner: init);
 }
 

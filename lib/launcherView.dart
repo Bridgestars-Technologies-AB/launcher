@@ -130,7 +130,7 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
             child: Align(
               child: Text(
                 launcher!.localAppVersion!.getDisplayValue(),
-                style: TextStyle(color: Colors.white60, fontSize: width / 80),
+                style: TextStyle(color: Colors.white60, fontSize: width / 60),
               ),
               alignment: Alignment.bottomLeft,
             )),
