@@ -95,6 +95,18 @@ class Launcher {
     l.remoteAppVersion = await l.getRemoteAppVersion();
     l.updateState();
 
+    Process.run("../Update.exe", [
+      "--update",
+      "https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher/win"
+    ]).then((x) {
+      print(x.stdout);
+      print(x.stderr);
+    }).catchError((e) {
+      print(e);
+      Sentry.captureException(
+          new Exception("Could not run update process: " + e.toString()),
+          stackTrace: StackTrace.current);
+    });
     return l;
   }
 
