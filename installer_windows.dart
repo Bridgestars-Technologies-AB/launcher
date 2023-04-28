@@ -259,6 +259,7 @@ Future<int> main(List<String> args) async {
           version: pubspec.version,
           authors: pubspec.authors,
           iconUrl: pubspec.uninstallIconPngUrl,
+          releaseNotes: "Bugfixes and improvements",
           additionalFiles: filePaths.map((f) => ({'src': f, 'target': f})))
       .toString();
 
