@@ -45,8 +45,17 @@ class VideoViewState extends State<VideoView> with WindowListener {
       // if (Platform.isWindows)
       // await windowManager.setSkipTaskbar(false);
       // await windowManager.minimize();
-      if (Platform.isWindows) await windowManager.hide();
-      Future.microtask(() async => startGameCallback());
+      if (Platform.isWindows) {
+        await windowManager.hide();
+
+        Future.microtask(() async => startGameCallback());
+      }
+      if (Platform.isMacOS) {
+        await windowManager.minimize();
+        startGameCallback();
+        await windowManager.isAlwaysOnBottom();
+        await Future.delayed(const Duration(milliseconds: 1000), () {});
+      }
     }
     // await Future.delayed(const Duration(milliseconds: 200), () {});
     // await Future.delayed(const Duration(milliseconds: 4000), () {});
@@ -55,8 +64,9 @@ class VideoViewState extends State<VideoView> with WindowListener {
   }
 
   Future showWithBackground() async {
-    await windowManager.show();
+    //await windowManager.show();
     await windowManager.setSkipTaskbar(false);
+    await windowManager.restore();
     await player.open(
       Media('asset:///assets/shortIntro.mov'),
     );
