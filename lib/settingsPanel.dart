@@ -81,7 +81,8 @@ drawSettingsPanel(
                     ![
                       LauncherState.canUpdate,
                       LauncherState.canRun,
-                      LauncherState.canDownload
+                      LauncherState.canDownload,
+                      LauncherState.canInstall
                     ].contains(launcher?.getState())
                         ? showAlertDialog(
                             "Download in progress",

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
@@ -297,19 +298,32 @@ class Launcher {
     try {
       var start = DateTime.now();
       if (Platform.isWindows) {
-        var bytes = new File(zipPath).readAsBytesSync();
-        var archive = ZipDecoder().decodeBytes(bytes);
-        for (var file in archive) {
-          var fileName = '$unzipPath/${file.name}';
-          if (file.isFile) {
-            //start timer
-            var outFile = File(fileName);
-            //_tempImages.add(outFile.path);
-            if (fileName.contains('__MACOSX')) continue;
-            outFile = await outFile.create(recursive: true);
-            await outFile.writeAsBytes(file.content);
+        var s = DateTime.now();
+        var time = () {
+          print(DateTime.now().difference(s));
+          start = DateTime.now();
+        };
+
+        await Isolate.run(() {
+          var bytes = File(zipPath).readAsBytesSync();
+          var archive = ZipDecoder().decodeBytes(bytes);
+          time();
+          for (var file in archive) {
+            var fileName = '$unzipPath/${file.name}';
+            if (file.isFile) {
+              //start timer
+              //_tempImages.add(outFile.path);
+              if (fileName.contains('__MACOSX')) continue;
+              var st = DateTime.now();
+              var outFile = File(fileName);
+              //print("Extracting: " + fileName);
+              outFile.createSync(recursive: true);
+              outFile.writeAsBytesSync(file.content);
+              //print("Time: " + DateTime.now().difference(st).toString());
+            }
           }
-        }
+        });
+        time();
       } else if (Platform.isMacOS) {
         // print([zipPath, "-d", path.join(unzipPath, "")]);
         var result = await Process.run(
