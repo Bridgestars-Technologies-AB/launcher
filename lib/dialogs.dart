@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:bridgestars/launcher.dart';
+import 'package:Bridgestars/launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 import 'package:loading_indicator/loading_indicator.dart';

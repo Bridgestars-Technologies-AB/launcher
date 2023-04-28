@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:bridgestars/settingsPanel.dart';
+import 'package:Bridgestars/settingsPanel.dart';
 import 'package:flutter/material.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 import 'package:window_manager/window_manager.dart';

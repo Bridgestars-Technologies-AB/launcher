@@ -1,7 +1,7 @@
 import 'dart:io';
 
-//import 'package:desktop_window/desktop_window.dart';
-import 'package:bridgestars/videoView.dart';
+import 'bitsdojo_window/lib/bitsdojo_window.dart';
+import 'package:Bridgestars/videoView.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -9,7 +9,6 @@ import 'package:window_manager/window_manager.dart';
 
 //import 'package:liquid_progress_indicator/liquid_progress_indicator.dart';
 //import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:bitsdojo_window/bitsdojo_window.dart';
 
 import 'launcherView.dart';
 import 'videoView.dart';
@@ -48,8 +47,6 @@ void init() async {
       //appWindow.alignment = Alignment.center;
       appWindow.show();
     });
-
-  await windowManager.ensureInitialized();
 
   WindowOptions windowOptions = WindowOptions(
     size: Size(1620 / 2, 1080 / 2),
