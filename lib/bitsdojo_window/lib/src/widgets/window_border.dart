@@ -1,4 +1,4 @@
-import '../../../../bitsdojo_window_windows/lib/bitsdojo_window_windows.dart'
+import 'package:bitsdojo_window_windows/bitsdojo_window_windows.dart'
     show WinDesktopWindow;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
