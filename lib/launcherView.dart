@@ -80,9 +80,9 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
           _handleBtnPress();
           return;
         } else {
-          await widget.videoViewKey.currentState
-              ?.playOutroAndHide(() => launcher?.handleBtnPress());
-          await widget.videoViewKey.currentState?.showWithBackground();
+          await widget.videoViewKey.currentState?.playOutroAndHide(
+              () => launcher?.handleBtnPress(), setLauncherState);
+          if(Platform.isWindows) await widget.videoViewKey.currentState?.showWithBackground();
           // await Future.delayed(Duration(seconds: 1));
           // // await launcher?.waitForGameClose();
           // await widget.videoViewKey.currentState?.showWithBackground();
@@ -101,7 +101,7 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
   String getExceptionMessage(e) =>
       e.toString().substring(e.toString().indexOf(':') + 1);
 
-  void setLauncherState(LauncherState s, DownloadInfo? p) => setState(() {
+  void setLauncherState(LauncherState s, {DownloadInfo? p}) => setState(() {
         launcherState = s;
         launcherStateString = getLauncherStateString(s, launcher);
         progress = p;

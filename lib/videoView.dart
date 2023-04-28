@@ -1,9 +1,12 @@
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
+
+import 'launcher.dart';
 
 class VideoView extends StatefulWidget {
   final Function(bool) onShowUIChanged;
@@ -34,27 +37,34 @@ class VideoViewState extends State<VideoView> with WindowListener {
     widget.onShowUIChanged(b);
   }
 
-  Future playOutroAndHide(Function? startGameCallback) async {
-    setShowUI(false);
-    await player.open(Media('asset:///assets/shortOutro.mov'), play: true);
-    // await player.setRate(-1.0);
-    // await player.play();
-    await Future.delayed(const Duration(milliseconds: 1000), () {});
-    await player.pause();
+  Future playOutroAndHide(
+      Function? startGameCallback, Function? setLauncherState) async {
     if (startGameCallback != null) {
+      if (Platform.isMacOS) {
+        // await windowManager.minimize();
+        if (setLauncherState != null) setLauncherState(LauncherState.running);
+        Future.delayed(const Duration(milliseconds: 5000), () {
+          if (setLauncherState != null) setLauncherState(LauncherState.canRun);
+        });
+        startGameCallback();
+        // await windowManager.isAlwaysOnBottom();
+        // await Future.delayed(const Duration(milliseconds: 1000), () {});
+        return;
+      }
+
+      setShowUI(false);
+      await player.open(Media('asset:///assets/shortOutro.mov'), play: true);
+      // await player.setRate(-1.0);
+      // await player.play();
+      await Future.delayed(const Duration(milliseconds: 1000), () {});
+      await player.pause();
       // if (Platform.isWindows)
       // await windowManager.setSkipTaskbar(false);
       // await windowManager.minimize();
       if (Platform.isWindows) {
         await windowManager.hide();
-
+        if (setLauncherState != null) setLauncherState(LauncherState.running);
         Future.microtask(() async => startGameCallback());
-      }
-      if (Platform.isMacOS) {
-        await windowManager.minimize();
-        startGameCallback();
-        await windowManager.isAlwaysOnBottom();
-        await Future.delayed(const Duration(milliseconds: 1000), () {});
       }
     }
     // await Future.delayed(const Duration(milliseconds: 200), () {});
@@ -64,7 +74,7 @@ class VideoViewState extends State<VideoView> with WindowListener {
   }
 
   Future showWithBackground() async {
-    //await windowManager.show();
+    await windowManager.show();
     await windowManager.setSkipTaskbar(false);
     await windowManager.restore();
     await player.open(
@@ -131,7 +141,7 @@ class VideoViewState extends State<VideoView> with WindowListener {
           await windowManager.setPreventClose(false);
           dispose();
           await windowManager.close();
-        });
+        }, null);
       } else {
         dispose();
         await windowManager.setPreventClose(false);

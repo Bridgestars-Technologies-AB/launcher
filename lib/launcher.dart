@@ -63,22 +63,22 @@ class Launcher {
 
   void _setState(LauncherState s) {
     _currentState = s;
-    stateListener(s, null);
+    stateListener(s, p: null);
   }
 
-  void _setProgress(DownloadInfo p) => stateListener(_currentState, p);
+  void _setProgress(DownloadInfo p) => stateListener(_currentState, p: p);
 
   LauncherState getState() => _currentState;
-  Function(LauncherState, DownloadInfo?) stateListener = (s, d) => {};
+  Function(LauncherState, {DownloadInfo? p}) stateListener = (s, {p}) => {};
 
   //CONSTRUCTOR
-  Launcher._(Function(LauncherState, DownloadInfo?) listener) {
+  Launcher._(Function(LauncherState, {DownloadInfo? p}) listener) {
     this.stateListener = listener;
   }
 
   //async INIT
   static Future<Launcher> create(
-      Function(LauncherState, DownloadInfo?) listener) async {
+      Function(LauncherState, {DownloadInfo? p}) listener) async {
     var l = new Launcher._(listener);
     //paths
 
@@ -96,7 +96,7 @@ class Launcher {
     l.remoteAppVersion = await l.getRemoteAppVersion();
     l.updateState();
 
-    if(Platform.isWindows){
+    if (Platform.isWindows) {
       Process.run("../Update.exe", [
         "--update",
         "https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher/win"
