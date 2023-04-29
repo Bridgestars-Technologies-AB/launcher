@@ -38,26 +38,33 @@ class VideoViewState extends State<VideoView> with WindowListener {
   }
 
   Future playOutroAndHide(
-      Function? startGameCallback, Function? setLauncherState) async {
-    if (startGameCallback != null) {
-      if (Platform.isMacOS) {
-        // await windowManager.minimize();
-        if (setLauncherState != null) setLauncherState(LauncherState.running);
-        Future.delayed(const Duration(milliseconds: 5000), () {
-          if (setLauncherState != null) setLauncherState(LauncherState.canRun);
-        });
-        startGameCallback();
-        // await windowManager.isAlwaysOnBottom();
-        // await Future.delayed(const Duration(milliseconds: 1000), () {});
-        return;
-      }
-
+      Function? startGameCallback, Function? setLauncherState,
+      {bool macPlay = false}) async {
+    if (!Platform.isMacOS || macPlay) {
       setShowUI(false);
       await player.open(Media('asset:///assets/shortOutro.mov'), play: true);
       // await player.setRate(-1.0);
       // await player.play();
       await Future.delayed(const Duration(milliseconds: 1000), () {});
       await player.pause();
+    }
+    if (startGameCallback != null) {
+      if (Platform.isMacOS) {
+        // await windowManager.minimize();
+        if(!macPlay){
+
+        if (setLauncherState != null) setLauncherState(LauncherState.running);
+        Future.delayed(const Duration(milliseconds: 5000), () {
+          if (setLauncherState != null) setLauncherState(LauncherState.canRun);
+        });
+
+        }
+        startGameCallback();
+        // await windowManager.isAlwaysOnBottom();
+        // await Future.delayed(const Duration(milliseconds: 1000), () {});
+        return;
+      }
+
       // if (Platform.isWindows)
       // await windowManager.setSkipTaskbar(false);
       // await windowManager.minimize();
@@ -141,7 +148,7 @@ class VideoViewState extends State<VideoView> with WindowListener {
           await windowManager.setPreventClose(false);
           dispose();
           await windowManager.close();
-        }, null);
+        }, null, macPlay: true);
       } else {
         dispose();
         await windowManager.setPreventClose(false);
