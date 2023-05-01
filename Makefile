@@ -3,6 +3,9 @@ main:
 dev:
 	flutter run
 build_win:
+ifndef PASS
+$(error PASS is not set)
+endif
 	echo $(PASS) > certpass.txt	
 	flutter clean
 	flutter build windows
