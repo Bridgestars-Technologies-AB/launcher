@@ -11,7 +11,7 @@ endif
 	flutter build windows
 	flutter run -t squirrel_bin/installer_windows.dart
 sign_win:
-	.\squirrel_bin\signtool.exe sign /a /f ".\squirrel_bin\certificate.pfx" /p sQq2TOu0xQJ89l9qMhHFW3eO22X8T /v /fd sha256 /tr http://timestamp.digicert.com /td sha256 /n "Bridgestars Technologies Sweden AB" .\release\windows\Setup.exe
+	.\squirrel_bin\signtool.exe sign /a /f ".\squirrel_bin\certificate.pfx" /p sQq2TOu0xQJ89l9qMhHFW3eO22X8T /v /fd sha256 /tr http://timestamp.digicert.com /td sha256 /n "Bridgestars Technologies Sweden AB" .\release_win\Setup.exe
 build_mac:
 	flutter clean
 	flutter build macos

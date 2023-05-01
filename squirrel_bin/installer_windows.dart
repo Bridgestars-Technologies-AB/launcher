@@ -219,8 +219,9 @@ Future<int> main(List<String> args) async {
   }
   final yaml = loadYaml(await File(pubspecYaml).readAsString());
 
-  final template =
-      Environment().fromString(await File("nuspec.jinja").readAsString());
+  final template = Environment().fromString(
+      await File(path.join(appDir, "squirrel_bin", "nuspec.jinja"))
+          .readAsString());
 
   final pubspec = PubspecParams.fromYaml(yaml);
   final buildDirectory = canonicalizePubspecPath(
@@ -229,7 +230,8 @@ Future<int> main(List<String> args) async {
   // Copy Squirrel.exe into the app dir and squish the setup icon in
   final tgtSquirrel = path.join(buildDirectory, 'squirrel.exe');
   if (!await File(tgtSquirrel).exists()) {
-    await File(path.join(appDir, 'squirrel_bin', 'squirrel.exe')).copy(tgtSquirrel);
+    await File(path.join(appDir, 'squirrel_bin', 'squirrel.exe'))
+        .copy(tgtSquirrel);
   }
 
   if (pubspec.setupIcon != null) {
