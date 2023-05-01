@@ -51,13 +51,12 @@ class VideoViewState extends State<VideoView> with WindowListener {
     if (startGameCallback != null) {
       if (Platform.isMacOS) {
         // await windowManager.minimize();
-        if(!macPlay){
-
-        if (setLauncherState != null) setLauncherState(LauncherState.running);
-        Future.delayed(const Duration(milliseconds: 5000), () {
-          if (setLauncherState != null) setLauncherState(LauncherState.canRun);
-        });
-
+        if (!macPlay) {
+          if (setLauncherState != null) setLauncherState(LauncherState.running);
+          Future.delayed(const Duration(milliseconds: 5000), () {
+            if (setLauncherState != null)
+              setLauncherState(LauncherState.canRun);
+          });
         }
         startGameCallback();
         // await windowManager.isAlwaysOnBottom();
@@ -72,6 +71,7 @@ class VideoViewState extends State<VideoView> with WindowListener {
         await windowManager.hide();
         if (setLauncherState != null) setLauncherState(LauncherState.running);
         Future.microtask(() async => startGameCallback());
+        if (setLauncherState != null) setLauncherState(LauncherState.canRun);
       }
     }
     // await Future.delayed(const Duration(milliseconds: 200), () {});
