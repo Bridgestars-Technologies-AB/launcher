@@ -11,5 +11,5 @@ sign_win:
 	.\squirrel_bin\signtool.exe sign /a /f ".\squirrel_bin\certificate.pfx" /p sQq2TOu0xQJ89l9qMhHFW3eO22X8T /v /fd sha256 /tr http://timestamp.digicert.com /td sha256 /n "Bridgestars Technologies Sweden AB" .\release\windows\Setup.exe
 build_mac:
 	flutter clean
-	flutter build macos
+	flutter build macos --split-per-abi
 	cp -r build/macos/Build/Products/Release/Bridgestars.app release/Bridgestars.app
