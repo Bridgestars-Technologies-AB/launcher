@@ -1,8 +1,7 @@
 # added
 game/
 build/
-release/
-
+dist/
 .bump/.terraform
 
 
