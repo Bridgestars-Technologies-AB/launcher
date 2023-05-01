@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import 'package:window_manager/window_manager.dart';
 
+import 'package:auto_updater/auto_updater.dart';
 //import 'package:liquid_progress_indicator/liquid_progress_indicator.dart';
 //import 'package:flutter_spinkit/flutter_spinkit.dart';
 
@@ -32,10 +33,31 @@ void main() async {
 
 void init() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await windowManager.ensureInitialized();
   if (!kIsWeb &&
       (Platform.isMacOS || Platform.isLinux || Platform.isWindows)) {}
 
+  if (Platform.isWindows) {
+    Process.run("../Update.exe", [
+      "--update",
+      "https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher/win"
+    ]).then((x) {
+      print(x.stdout);
+      print(x.stderr);
+    }).catchError((e) {
+      print(e);
+      Sentry.captureException(
+          new Exception("Could not run update process: " + e.toString()),
+          stackTrace: StackTrace.current);
+    });
+  }
+  else if(Platform.isMacOS){
+    String feedURL = 'https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher/mac/RELEASES.xml';
+    await autoUpdater.setFeedURL(feedURL);
+    await autoUpdater.checkForUpdates();
+    await autoUpdater.setScheduledCheckInterval(3600);
+  }
+
+  await windowManager.ensureInitialized();
   MediaKit.ensureInitialized();
 
   if (Platform.isWindows)

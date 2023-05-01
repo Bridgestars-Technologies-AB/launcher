@@ -1,6 +1,7 @@
 name: Bridgestars
 description: A launcher for the Bridgestars unity application.
-authors: Bridgestars Technologies Sweden AB
+authors:
+  - Bridgestars Technologies Sweden AB
 
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
@@ -8,6 +9,9 @@ version: 1.1.3
 
 environment:
   sdk: ">=2.16.0 <4.0.0"
+platforms:
+  macos:
+  windows:
 
 dependencies:
   flutter:
@@ -43,22 +47,21 @@ dependencies:
     #media_kit_libs_android_video: ^1.0.1           # Android package for video native libraries.
     #media_kit_libs_ios_video: ^1.0.4               # iOS package for video native libraries.
 
-  bitsdojo_window_platform_interface: ^0.1.2
+  bitsdojo_window_platform_interface:
+    ^0.1.2
     #path: ../bitsdojo_window_platform_interface
-  bitsdojo_window_windows: ^0.1.5
+  bitsdojo_window_windows:
+    ^0.1.5
     #path: ../bitsdojo_window_windows
- # bitsdojo_window_macos: ^0.1.3
-    #path: ../bitsdojo_window_macos
+  # bitsdojo_window_macos: ^0.1.3
+  #path: ../bitsdojo_window_macos
   bitsdojo_window_linux: ^0.1.3
+  auto_updater: ^0.1.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   msix: ^3.6.2
-
-
-
-
 
 flutter:
   uses-material-design: true
@@ -86,15 +89,15 @@ flutter:
 
 squirrel:
   windows:
-    certificateFile: "vendor/certificate.pfx"
+    certificateFile: "squirrel_bin/certificate.pfx"
     # overrideSigningParameters: "bar"
-    loadingGif: "vendor/loading.gif"
-    appIcon: "vendor/app_icon.ico"
+    loadingGif: "squirrel_bin/loading.gif"
+    appIcon: "squirrel_bin/app_icon.ico"
     # uninstallIconPngUrl: "vendor/app_icon.ico"
     appFriendlyName: "Bridgestars"
     appDescription: "The Bridgestars App"
-    setupIcon: "vendor/app_icon.ico"
-    releaseDirectory: "release/windows"
+    setupIcon: "squirrel_bin/app_icon.ico"
+    releaseDirectory: "release_win"
     releaseUrl: "https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher/win"
     buildEnterpriseMsiPackage: false
     dontBuildDeltas: false
