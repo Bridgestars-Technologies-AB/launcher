@@ -10,7 +10,7 @@ terraform {
 # Don't put credentials here, instead export them as
 # AWS_ACCESS_KEY and AWS_SECRET_KEY
 provider "aws" {
-  region = "eu-north-1"
+  region = "us-east-1"
 }
 
 locals {

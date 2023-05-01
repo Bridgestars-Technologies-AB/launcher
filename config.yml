@@ -1,3 +1,4 @@
+
 app_name: Bridgestars
 app_filename: Bridgestars.zip # Should match exactly the .zip file found in ./release/
 s3_bucket_name: bridgestars-launcher-sparkle # Must be unique
