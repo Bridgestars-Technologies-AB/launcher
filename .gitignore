@@ -3,6 +3,8 @@ game/
 build/
 release/
 
+.bump/.terraform
+
 
 # Miscellaneous
 *.class

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -28,9 +29,9 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>SUPublicEDKey</key>
-  <string>kRRUc8tNeuS695pMyziQGtBL2vlsTujamrMKnho3+7I=</string>
 	<key>SUFeedURL</key>
-  <string>https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher/mac/RELEASES.xml</string>
+	<string>https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher/mac/RELEASES.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>kRRUc8tNeuS695pMyziQGtBL2vlsTujamrMKnho3+7I=</string>
 </dict>
 </plist>
