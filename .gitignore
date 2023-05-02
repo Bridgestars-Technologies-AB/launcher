@@ -4,6 +4,7 @@ build/
 dist/
 .bump/.terraform
 release_win/
+release/
 
 
 # Miscellaneous

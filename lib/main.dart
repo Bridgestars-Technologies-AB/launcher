@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 
 import 'package:window_manager/window_manager.dart';
 
-import 'package:auto_updater/auto_updater.dart';
+// import 'package:auto_updater/auto_updater.dart';
 //import 'package:liquid_progress_indicator/liquid_progress_indicator.dart';
 //import 'package:flutter_spinkit/flutter_spinkit.dart';
 
@@ -50,12 +50,12 @@ void init() async {
           stackTrace: StackTrace.current);
     });
   }
-  else if(Platform.isMacOS){
-    String feedURL = 'https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher/mac/RELEASES.xml';
-    await autoUpdater.setFeedURL(feedURL);
-    await autoUpdater.checkForUpdates();
-    await autoUpdater.setScheduledCheckInterval(3600);
-  }
+  // else if(Platform.isMacOS){
+  //   String feedURL = 'https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher/mac/RELEASES.xml';
+  //   await autoUpdater.setFeedURL(feedURL);
+  //   await autoUpdater.checkForUpdates();
+  //   await autoUpdater.setScheduledCheckInterval(3600);
+  // }
 
   await windowManager.ensureInitialized();
   MediaKit.ensureInitialized();

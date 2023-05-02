@@ -13,4 +13,5 @@ sign_win:
 build_mac:
 	flutter clean
 	flutter build macos
+	# rm -r release/Bridgestars.app
 	cp -r build/macos/Build/Products/Release/Bridgestars.app release/Bridgestars.app
