@@ -1,0 +1,25 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>Bridgestars</title>
+        <item>
+            <title>1.1.7</title>
+            <pubDate>Thu, 04 May 2023 21:07:59 +0200</pubDate>
+            <sparkle:version>1.1.7</sparkle:version>
+            <sparkle:shortVersionString>1.1.7</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>10.14.6</sparkle:minimumSystemVersion>
+            <enclosure url="https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher/mac/bridgestars-macos-1.1.7.zip" length="57144926" type="application/octet-stream" sparkle:edSignature="gpJgjfLAiDQBCpTtirq8rGq0ZUshJYNuI9I32pASePpTCFQmOezW9Ejw1rr5LK1Teqt1PmZ0GHcVXxSWQyLCDg=="/>
+            <sparkle:deltas>
+                <enclosure url="https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher/mac/Bridgestars1.1.7-1.1.6.delta" sparkle:deltaFrom="1.1.6" length="271014" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="865040" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="W9/dvsXs+qMxSIKkkEVLstCJU4lNq6peVaizQGh7MloOfi+654+viRB3l/yGsFnnsMqHBpdOcvkiVcpzewcbCw=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
+            <title>1.1.6</title>
+            <pubDate>Thu, 04 May 2023 20:55:04 +0200</pubDate>
+            <sparkle:version>1.1.6</sparkle:version>
+            <sparkle:shortVersionString>1.1.6</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>10.14.6</sparkle:minimumSystemVersion>
+            <enclosure url="https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher/mac/bridgestars-macos-1.1.6.zip" length="57144835" type="application/octet-stream" sparkle:edSignature="emnLHcbsArc66obAqKVGj8ewb2gY014+s84BCpbIbWTMh4rhf30xWmpdkwc74HkMcBSyRSL9GB/MKj9KxwyPCQ=="/>
+        </item>
+    </channel>
+</rss>

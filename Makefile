@@ -13,5 +13,18 @@ sign_win:
 build_mac:
 	flutter clean
 	flutter build macos
-	# rm -r release/Bridgestars.app
-	cp -r build/macos/Build/Products/Release/Bridgestars.app release/Bridgestars.app
+	@echo ""
+	@echo "Open macos/Runner.xcworkspace in xcode"
+	@read -s -n 1 -p "Press any key to continue . . ."
+	@echo "In xcode menu, go to Product->archive to start archiving process"
+	@read -s -n 1 -p "Press any key to continue . . ."
+	@echo "Go to Window->Organizer and confirm that version with new name has been created. Select version and press Distribute App->Developer Id->confirm->upload->upload etc"
+	@read -s -n 1 -p "Press any key to continue . . ."
+	@echo "Wait for notarization to finish"
+	@read -s -n 1 -p "Press any key to continue . . ."
+	@echo "Export archive as app to folder 'release_mac', compress it and remove .app, rename it to 'bridgestars-macos-x.x.x.zip"
+	@read -s -n 1 -p "Press any key to continue . . ."
+	@echo "Generating appcast.xml and delta updates...."
+	Sparkle/bin/generate_appcast release_mac
+	
+
