@@ -26,6 +26,8 @@
 		33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F22044A3C60003C045 /* Assets.xcassets */; };
 		33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F42044A3C60003C045 /* MainMenu.xib */; };
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
+		E4028EA82A0443B1002AEBD6 /* MoveApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4028EA72A0443B1002AEBD6 /* MoveApplication.swift */; };
+		E4028EAB2A0443E4002AEBD6 /* MoveApplication.strings in Resources */ = {isa = PBXBuildFile; fileRef = E4028EA92A0443E4002AEBD6 /* MoveApplication.strings */; };
 		F7A5EB825012C03CE99A3CDA /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B184B1C0DFB04F0BEF4309FE /* Pods_Runner.framework */; };
 /* End PBXBuildFile section */
 
@@ -82,6 +84,8 @@
 		A7A544E584B38C6273174C06 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		B184B1C0DFB04F0BEF4309FE /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		CFE17B8A237EBFC83430E6D9 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
+		E4028EA72A0443B1002AEBD6 /* MoveApplication.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MoveApplication.swift; path = "../../LetsMoveSwift-master/LetsMoveSwift/MoveApplication.swift"; sourceTree = "<group>"; };
+		E4028EAA2A0443E4002AEBD6 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = "../../LetsMoveSwift-master/LetsMoveSwift/en.lproj/MoveApplication.strings"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -152,6 +156,8 @@
 			isa = PBXGroup;
 			children = (
 				33CC10F02044A3C60003C045 /* AppDelegate.swift */,
+				E4028EA72A0443B1002AEBD6 /* MoveApplication.swift */,
+				E4028EA92A0443E4002AEBD6 /* MoveApplication.strings */,
 				33CC11122044BFA00003C045 /* MainFlutterWindow.swift */,
 				33E51913231747F40026EE4D /* DebugProfile.entitlements */,
 				33E51914231749380026EE4D /* Release.entitlements */,
@@ -255,6 +261,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E4028EAB2A0443E4002AEBD6 /* MoveApplication.strings in Resources */,
 				33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */,
 				33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
 			);
@@ -350,6 +357,7 @@
 				33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */,
 				33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */,
 				335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */,
+				E4028EA82A0443B1002AEBD6 /* MoveApplication.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -371,6 +379,14 @@
 			);
 			name = MainMenu.xib;
 			path = Runner;
+			sourceTree = "<group>";
+		};
+		E4028EA92A0443E4002AEBD6 /* MoveApplication.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				E4028EAA2A0443E4002AEBD6 /* en */,
+			);
+			name = MoveApplication.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
