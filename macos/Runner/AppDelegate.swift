@@ -10,7 +10,7 @@ class AppDelegate: FlutterAppDelegate {
 
     }
     override func applicationDidFinishLaunching(_ aNotification: Notification) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 7.0) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                //call any function
             LetsMove.shared.moveToApplicationsFolderIfNecessary()
         }

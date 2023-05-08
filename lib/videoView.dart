@@ -117,6 +117,8 @@ class VideoViewState extends State<VideoView> with WindowListener {
       Future.delayed(const Duration(milliseconds: 2500), () {})
           .then((value) async {
         await player.pause();
+      // await controller?.dispose();
+      // await player.dispose();
         setShowUI(true);
       });
     }); // Add this line to override the default close handler
@@ -125,11 +127,11 @@ class VideoViewState extends State<VideoView> with WindowListener {
   @override
   void dispose() {
     windowManager.removeListener(this);
-    Future.microtask(() async {
-      /// Release allocated resources back to the system.
-      await controller?.dispose();
-      await player.dispose();
-    });
+    // Future.microtask(() async {
+    //   /// Release allocated resources back to the system.
+    //   await controller?.dispose();
+    //   await player.dispose();
+    // });
     super.dispose();
   }
 

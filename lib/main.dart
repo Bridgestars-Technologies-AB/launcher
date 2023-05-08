@@ -22,6 +22,36 @@ late final navigatorKey = GlobalKey<NavigatorState>();
 GlobalKey<VideoViewState> videoKey = GlobalKey();
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await windowManager.ensureInitialized();
+
+
+  WindowOptions windowOptions = WindowOptions(
+    size: Size(1620 / 2, 1080 / 2),
+    center: true,
+    backgroundColor: Colors.transparent,
+    skipTaskbar: false,
+    minimumSize: Size(1620 * 0.4, 1080 * 0.4),
+    maximumSize: Size(1620 / 1.5, 1080 / 1.5),
+    titleBarStyle: TitleBarStyle.hidden,
+  );
+
+  await windowManager.setAspectRatio(3.0 / 2.0);
+  windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
+
+  if (Platform.isWindows)
+    doWhenWindowReady(() {
+      //const initialSize = Size(600, 450);
+      appWindow.minSize = Size(1620 * 0.4, 1080 * 0.4);
+      appWindow.size = Size(1620 / 2, 1080 / 2);
+      appWindow.maxSize = Size(1620 / 1.5, 1080 / 1.5);
+      //appWindow.alignment = Alignment.center;
+      appWindow.show();
+    });
+
   await SentryFlutter.init((options) {
     options.dsn =
         'https://0fa41ac90dce42e8af98c5b60d24ee7a@o4505084744433664.ingest.sentry.io/4505086445027328';
@@ -32,7 +62,7 @@ void main() async {
 }
 
 void init() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  MediaKit.ensureInitialized();
   if (!kIsWeb &&
       (Platform.isMacOS || Platform.isLinux || Platform.isWindows)) {}
 
@@ -57,33 +87,6 @@ void init() async {
   //   await autoUpdater.setScheduledCheckInterval(3600);
   // }
 
-  await windowManager.ensureInitialized();
-  MediaKit.ensureInitialized();
-
-  if (Platform.isWindows)
-    doWhenWindowReady(() {
-      //const initialSize = Size(600, 450);
-      appWindow.minSize = Size(1620 * 0.4, 1080 * 0.4);
-      appWindow.size = Size(1620 / 2, 1080 / 2);
-      appWindow.maxSize = Size(1620 / 1.5, 1080 / 1.5);
-      //appWindow.alignment = Alignment.center;
-      appWindow.show();
-    });
-
-  WindowOptions windowOptions = WindowOptions(
-    size: Size(1620 / 2, 1080 / 2),
-    center: true,
-    backgroundColor: Colors.transparent,
-    skipTaskbar: false,
-    minimumSize: Size(1620 * 0.4, 1080 * 0.4),
-    maximumSize: Size(1620 / 1.5, 1080 / 1.5),
-    titleBarStyle: TitleBarStyle.hidden,
-  );
-  await windowManager.setAspectRatio(3.0 / 2.0);
-  windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.show();
-    await windowManager.focus();
-  });
 
   runApp(MaterialApp(
       navigatorKey: navigatorKey,

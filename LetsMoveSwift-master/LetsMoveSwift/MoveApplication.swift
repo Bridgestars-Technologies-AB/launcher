@@ -54,6 +54,9 @@ class LetsMove : NSObject {
             let buttonStay = NSLocalizedString("Do Not Move", tableName: "MoveApplication", comment: "")
             let infoNeedsPassword = NSLocalizedString("Note that this will require an administrator password.", tableName: "MoveApplication", comment: "")
             let infoInDownloads = NSLocalizedString("This will keep your Downloads folder uncluttered.", tableName: "MoveApplication", comment: "")
+            let deleteFromDst = NSLocalizedString("You already have Bridgestars on your desktop, please move it to the bin.", tableName: "MoveApplication", comment: "")
+            let haveDeleted = NSLocalizedString("I have done it.", tableName: "MoveApplication", comment: "")
+            
         }
         
         let moveStrings = MoveStrings()
@@ -62,25 +65,28 @@ class LetsMove : NSObject {
         guard UserDefaults.standard.bool(forKey: AlertSuppressKey) == false else { return }
         
         // Path of the bundle
-        let bundlePath = Bundle.main.bundlePath
-        let bundleNameURL = URL(string: bundlePath)
+        let bundleNameURL = Bundle.main.bundleURL
+        let bundlePath = bundleNameURL.path
         
         // Skip if the application is already in some Applications folder
-        guard isInApplicationsFolder(bundleNameURL!) == false else { return }
+        guard isInApplicationsFolder(bundleNameURL) == false else { return }
         
         // Since we are good to go, get the preferred installation directory.
         let (applicationsDirectory, installToUserApplications) = PreferredInstallLocation()
-        let bundleName = bundleNameURL!.lastPathComponent
+        let bundleName = bundleNameURL.lastPathComponent
         let destinationURL = applicationsDirectory!.appendingPathComponent(bundleName)
         
         // Check if we need admin password to write to the Applications directory
         // Check if the destination bundle is already there but not writable
-        let isWritableFileSrc = fileManager.isWritableFile(atPath: applicationsDirectory!.absoluteString)
+        var isWritableFileSrc = fileManager.isWritableFile(atPath: applicationsDirectory!.absoluteString)
         let isFileExists =  fileManager.fileExists(atPath: destinationURL.absoluteString)
         let isWritableFileDst = fileManager.isWritableFile(atPath: destinationURL.absoluteString)
         
-        let isNeedAuthorization = isWritableFileSrc == false || (isFileExists == true && isWritableFileDst == false)
+        var isNeedAuthorization = isWritableFileSrc == false || (isFileExists == true && isWritableFileDst == false)
         
+        let test = NSAlert()
+        test.messageText = "filesrc: \(applicationsDirectory!.absoluteURL.path)"
+        test.runModal()
         // Setup the alert
         let alert = NSAlert()
         alert.messageText = installToUserApplications ? moveStrings.questionTitleHome : moveStrings.questionTitle
@@ -89,7 +95,7 @@ class LetsMove : NSObject {
         if isNeedAuthorization == true {
             informativeText += " " + moveStrings.infoNeedsPassword
             
-        } else if isInDownloadsFolder(bundleNameURL!) {
+        } else if isInDownloadsFolder(bundleNameURL) {
             // Don't mention this stuff if we need authentication. The informative text is long enough as it is in that case.
             informativeText += " " + moveStrings.infoInDownloads
         }
@@ -119,7 +125,25 @@ class LetsMove : NSObject {
         
         if alert.runModal() == NSApplication.ModalResponse.alertFirstButtonReturn {
             print("INFO -- Moving myself to the Applications folder")
-            
+            if(isWritableFileSrc == false){
+                do{
+                    let files = try fileManager.contentsOfDirectory(atPath: applicationsDirectory!.absoluteURL.path)
+                    for file in files {
+                        if(file.lowercased().contains("bridgestars")){
+                            let alert2 = NSAlert()
+                            alert2.messageText = moveStrings.deleteFromDst
+                            alert2.addButton(withTitle: moveStrings.haveDeleted)
+                            alert2.runModal()
+                            isWritableFileSrc = true
+                            isNeedAuthorization = isWritableFileSrc == false || (isFileExists == true && isWritableFileDst == false)
+                        }
+                    }
+                }catch{
+                    let b = NSAlert(error: error)
+                    b.messageText += "error 1"
+                    b.runModal()
+                }
+            }
             // Move
             if isNeedAuthorization == true {
                 
@@ -224,7 +248,7 @@ class LetsMove : NSObject {
     }
     
     func isInApplicationsFolder(_ current: URL) -> Bool {
-        return IsInFolder(current, .desktopDirectory, "Applications")
+        return IsInFolder(current, .desktopDirectory, "Desktop")
     }
     
     func isInDownloadsFolder(_ current: URL) -> Bool {
