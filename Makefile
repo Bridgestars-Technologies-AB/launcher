@@ -11,8 +11,8 @@ build_win:
 sign_win:
 	.\squirrel_bin\signtool.exe sign /a /f ".\squirrel_bin\certificate.pfx" /p sQq2TOu0xQJ89l9qMhHFW3eO22X8T /v /fd sha256 /tr http://timestamp.digicert.com /td sha256 /n "Bridgestars Technologies Sweden AB" .\release_win\Setup.exe
 build_mac:
-	flutter clean
-	flutter build macos
+	#flutter clean
+	#flutter build macos
 	@echo ""
 	@echo "Open macos/Runner.xcworkspace in xcode"
 	@read -s -n 1 -p "Press any key to continue . . ."
@@ -26,6 +26,5 @@ build_mac:
 	@read -s -n 1 -p "Press any key to continue . . ."
 	@echo "Generating appcast.xml and delta updates...."
 	Sparkle/bin/generate_appcast release_mac
-	appdmg dmg-config.json release_mac/Bridgestars.app
 	
 

@@ -117,11 +117,11 @@ void PFMoveToApplicationsFolderIfNecessary(void) {
 	NSAlert *alert = [[[NSAlert alloc] init] autorelease];
 	{
 		NSString *informativeText = nil;
-
+		
 		[alert setMessageText:(installToUserApplications ? kStrMoveApplicationQuestionTitleHome : kStrMoveApplicationQuestionTitle)];
-
+		
 		informativeText = kStrMoveApplicationQuestionMessage;
-
+		
 		if (needAuthorization) {
 			informativeText = [informativeText stringByAppendingString:@" "];
 			informativeText = [informativeText stringByAppendingString:kStrMoveApplicationQuestionInfoWillRequirePasswd];
@@ -139,8 +139,8 @@ void PFMoveToApplicationsFolderIfNecessary(void) {
 		[myStyle2 setMaximumLineHeight:14.0];
 		[myStyle2 setAlignment: NSTextAlignmentCenter];
 		[infoView setDefaultParagraphStyle:myStyle2];
-		
-		[infoView setFrame: NSMakeRect(0,0,230, 40)];
+		int height = needAuthorization || IsInDownloadsFolder(bundlePath) ? 60 : 35;
+		[infoView setFrame: NSMakeRect(0,0,260, height)];
 		[infoView setString: informativeText];
 		//NSFont *font = [NSFont boldSystemFontOfSize:12];
 		NSFont *font = [NSFont systemFontOfSize:13];
@@ -509,7 +509,7 @@ static void CreateShortcut(NSString *destinationPath){
 	[myStyle2 setAlignment: NSTextAlignmentCenter];
 	[infoView setDefaultParagraphStyle:myStyle2];
 	
-	[infoView setFrame: NSMakeRect(0,0,230, 40)];
+	[infoView setFrame: NSMakeRect(0,0,230, 35)];
 	[infoView setString: kStrShortcutInfo];
 	//NSFont *font = [NSFont boldSystemFontOfSize:12];
 	NSFont *font = [NSFont systemFontOfSize:13];
