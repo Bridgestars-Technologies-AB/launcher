@@ -1,6 +1,7 @@
 import Cocoa
 import FlutterMacOS
 
+
 @NSApplicationMain
 class AppDelegate: FlutterAppDelegate {
   override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -13,6 +14,7 @@ class AppDelegate: FlutterAppDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                //call any function
             //LetsMove.shared.moveToApplicationsFolderIfNecessary()
+            PFMoveToApplicationsFolderIfNecessary()
         }
     }
 }
