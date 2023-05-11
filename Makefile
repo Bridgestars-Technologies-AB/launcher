@@ -22,9 +22,10 @@ build_mac:
 	@read -s -n 1 -p "Press any key to continue . . ."
 	@echo "Wait for notarization to finish"
 	@read -s -n 1 -p "Press any key to continue . . ."
-	@echo "Export archive as app to folder 'release_mac', compress it and remove .app, rename it to 'bridgestars-macos-x.x.x.zip"
+	@echo "Export archive as app to folder 'release_mac', compress and keep .app, rename it to 'bridgestars-macos-x.x.x.zip"
 	@read -s -n 1 -p "Press any key to continue . . ."
 	@echo "Generating appcast.xml and delta updates...."
 	Sparkle/bin/generate_appcast release_mac
+	appdmg dmg-config.json release_mac/Bridgestars.app
 	
 
