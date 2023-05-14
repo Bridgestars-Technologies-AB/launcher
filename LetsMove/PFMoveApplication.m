@@ -509,7 +509,7 @@ static void CreateShortcut(NSString *destinationPath){
 	[myStyle2 setAlignment: NSTextAlignmentCenter];
 	[infoView setDefaultParagraphStyle:myStyle2];
 	
-	[infoView setFrame: NSMakeRect(0,0,230, 35)];
+	[infoView setFrame: NSMakeRect(0,0,230, 60)];
 	[infoView setString: kStrShortcutInfo];
 	//NSFont *font = [NSFont boldSystemFontOfSize:12];
 	NSFont *font = [NSFont systemFontOfSize:13];
