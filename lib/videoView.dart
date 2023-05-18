@@ -51,13 +51,12 @@ class VideoViewState extends State<VideoView> with WindowListener {
     if (startGameCallback != null) {
       if (Platform.isMacOS) {
         // await windowManager.minimize();
-        if(!macPlay){
-
-        if (setLauncherState != null) setLauncherState(LauncherState.running);
-        Future.delayed(const Duration(milliseconds: 5000), () {
-          if (setLauncherState != null) setLauncherState(LauncherState.canRun);
-        });
-
+        if (!macPlay) {
+          if (setLauncherState != null) setLauncherState(LauncherState.running);
+          Future.delayed(const Duration(milliseconds: 5000), () {
+            if (setLauncherState != null)
+              setLauncherState(LauncherState.canRun);
+          });
         }
         startGameCallback();
         // await windowManager.isAlwaysOnBottom();
@@ -72,6 +71,7 @@ class VideoViewState extends State<VideoView> with WindowListener {
         await windowManager.hide();
         if (setLauncherState != null) setLauncherState(LauncherState.running);
         Future.microtask(() async => startGameCallback());
+        if (setLauncherState != null) setLauncherState(LauncherState.canRun);
       }
     }
     // await Future.delayed(const Duration(milliseconds: 200), () {});
@@ -117,6 +117,8 @@ class VideoViewState extends State<VideoView> with WindowListener {
       Future.delayed(const Duration(milliseconds: 2500), () {})
           .then((value) async {
         await player.pause();
+      // await controller?.dispose();
+      // await player.dispose();
         setShowUI(true);
       });
     }); // Add this line to override the default close handler
@@ -125,11 +127,11 @@ class VideoViewState extends State<VideoView> with WindowListener {
   @override
   void dispose() {
     windowManager.removeListener(this);
-    Future.microtask(() async {
-      /// Release allocated resources back to the system.
-      await controller?.dispose();
-      await player.dispose();
-    });
+    // Future.microtask(() async {
+    //   /// Release allocated resources back to the system.
+    //   await controller?.dispose();
+    //   await player.dispose();
+    // });
     super.dispose();
   }
 

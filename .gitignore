@@ -3,6 +3,9 @@ game/
 build/
 dist/
 .bump/.terraform
+release_win/
+release_mac/
+release/
 
 
 # Miscellaneous

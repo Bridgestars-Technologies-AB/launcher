@@ -30,8 +30,10 @@
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>SUFeedURL</key>
-	<string>https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher/mac/RELEASES.xml</string>
+	<string>https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher/mac/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>kRRUc8tNeuS695pMyziQGtBL2vlsTujamrMKnho3+7I=</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Please allow the app to move itself.</string>
 </dict>
 </plist>

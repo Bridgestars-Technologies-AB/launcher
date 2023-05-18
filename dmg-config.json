@@ -1,0 +1,21 @@
+{
+  "title": "Bridgestars",
+  "icon": "assets/app_icon.ico",
+  "icon-size": 64,
+  "contents": [
+    { "x": 256, "y": 128, "type": "link", "path": "/Applications" },
+    { "x": 256, "y": 384, "type": "link", "path": "~/Desktop" },
+    {
+      "x": 64,
+      "y": 256,
+      "type": "file",
+      "path": "release_mac/Bridgestars.app"
+    }
+  ],
+  "window": {
+    "size": {
+      "width": 512,
+      "height": 384
+    }
+  }
+}

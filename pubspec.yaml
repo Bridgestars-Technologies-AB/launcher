@@ -5,7 +5,7 @@ authors:
 
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
-version: 1.1.3
+version: 1.1.8
 
 environment:
   sdk: ">=2.16.0 <4.0.0"
@@ -34,16 +34,22 @@ dependencies:
   font_awesome_flutter: ^10.1.0
   url_launcher: ^6.1.2
   squirrel: ^0.1.0
-  jinja: ^0.3.4
   path: ^1.8.2
   sentry_flutter: ^7.5.0
   media_kit: ^0.0.7 # Primary package.
   media_kit_video: ^0.0.9 # For video rendering.
-  media_kit_native_event_loop: ^1.0.3 # Support for higher number of concurrent instances & better performance.
+
+  # version with lower macos target has not been released
+  media_kit_native_event_loop: # Support for higher number of concurrent instances & better performance.
+    git:
+      url: https://github.com/alexmercerind/media_kit.git
+      path: media_kit_native_event_loop
+      ref: 1e55eaf # commit hash
+
   media_kit_libs_macos_video: ^1.0.5 # macOS package for video native libraries.
-  media_kit_libs_windows_video: ^1.0.2 # Windows package for video native libraries.
-  media_kit_libs_linux:
-    ^1.0.2 # GNU/Linux dependency package.
+  media_kit_libs_windows_video:
+    ^1.0.2 # Windows package for video native libraries.
+    #media_kit_libs_linux: ^1.0.2 # GNU/Linux dependency package.
     #media_kit_libs_android_video: ^1.0.1           # Android package for video native libraries.
     #media_kit_libs_ios_video: ^1.0.4               # iOS package for video native libraries.
 
@@ -55,13 +61,15 @@ dependencies:
     #path: ../bitsdojo_window_windows
   # bitsdojo_window_macos: ^0.1.3
   #path: ../bitsdojo_window_macos
-  bitsdojo_window_linux: ^0.1.3
-  auto_updater: ^0.1.6
+  bitsdojo_window_linux:
+    ^0.1.3
+    # auto_updater: ^0.1.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   msix: ^3.6.2
+  jinja: ^0.3.4
 
 flutter:
   uses-material-design: true

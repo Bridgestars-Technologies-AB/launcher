@@ -61,7 +61,7 @@ Function showLoadingDialog(String text) {
 showOkDialog(
     String title, String text, String btnText, Function() closeCallback) {
   if (navigatorKey.currentContext == null)
-    throw new Exception("Something not set up right");
+    throw new Exception("Something is not set up right");
 
   var context = navigatorKey.currentContext!;
 
@@ -123,7 +123,7 @@ showOkDialog(
 
 showAppInfoDialog(Version? v, Function()? closeCallback) {
   if (navigatorKey.currentContext == null)
-    throw new Exception("Something not set up right");
+    throw new Exception("Something is not set up right");
 
   var context = navigatorKey.currentContext!;
 
@@ -206,7 +206,7 @@ showAlertDialog(String title, String message, List<Text> btnTexts,
 
 // show the dialog
   if (navigatorKey.currentContext == null)
-    throw new Exception("Something not set up right");
+    throw new Exception("Something is not set up right");
   showDialog(
     context: navigatorKey.currentContext!,
     builder: (BuildContext context) {
