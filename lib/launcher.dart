@@ -1,18 +1,20 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive_io.dart';
 import 'dart:convert';
+import 'package:path/path.dart' as path;
+
+import 'package:sentry/sentry.dart';
 
 enum LauncherState {
   canDownload,
   canUpdate,
+  canInstall,
   canRun,
   waiting,
   downloading,
@@ -26,14 +28,13 @@ enum LauncherState {
 
 class Launcher {
   //PATHS
-  String root = '';
-  String _slash = Platform.isWindows ? "\\" : "/";
+  String root = path.current;
 
-  String getArchivePath() => root + _slash + "download.zip";
+  String getArchivePath() => path.join(root, "download.zip");
 
   Future<bool> archiveExists() => new File(getArchivePath()).exists();
 
-  String getExtractDir() => root + _slash + "game";
+  String getExtractDir() => path.join(root, "game");
 
   String getGameDir() => getExtractDir() + "";
 
@@ -53,34 +54,38 @@ class Launcher {
       remoteAppVersion != null &&
       (localAppVersion == null || localAppVersion! < remoteAppVersion!);
 
-  String getAppVersionPath() => root + _slash + ".appVersion";
+  String getAppVersionPath() => path.join(root, ".appVersion");
 
-  String getLauncherVersionPath() => root + _slash + ".launcherVersion";
+  String getLauncherVersionPath() => path.join(root, ".launcherVersion");
 
   //STATE
   LauncherState _currentState = LauncherState.waiting;
 
   void _setState(LauncherState s) {
     _currentState = s;
-    stateListener(s, null);
+    stateListener(s, p: null);
   }
 
-  void _setProgress(DownloadInfo p) => stateListener(_currentState, p);
+  void _setProgress(DownloadInfo p) => stateListener(_currentState, p: p);
 
   LauncherState getState() => _currentState;
-  Function(LauncherState, DownloadInfo?) stateListener = (s, d) => {};
+  Function(LauncherState, {DownloadInfo? p}) stateListener = (s, {p}) => {};
 
   //CONSTRUCTOR
-  Launcher._(Function(LauncherState, DownloadInfo?) listener) {
+  Launcher._(Function(LauncherState, {DownloadInfo? p}) listener) {
     this.stateListener = listener;
   }
 
   //async INIT
   static Future<Launcher> create(
-      Function(LauncherState, DownloadInfo?) listener) async {
+      Function(LauncherState, {DownloadInfo? p}) listener) async {
     var l = new Launcher._(listener);
     //paths
-    l.root = (await getApplicationSupportDirectory()).path;
+
+    l.root = Platform.isWindows
+        ? Directory.current.parent.path
+        : (await getApplicationSupportDirectory()).path;
+
     Directory(l.getExtractDir()).createSync();
     l.updateExecutablePaths();
 
@@ -122,9 +127,15 @@ class Launcher {
         break;
 
       case LauncherState.canRun:
-        await runApp();
+        runApp();
         return LauncherState.running;
 
+      case LauncherState.canInstall:
+        _setState(LauncherState.installing);
+        await install();
+        await setLocalAppVersion(remoteAppVersion!);
+        updateState();
+        break;
       case LauncherState.waiting:
       case LauncherState.downloading:
       case LauncherState.installing:
@@ -145,8 +156,7 @@ class Launcher {
     else if (await updateExecutablePaths())
       _setState(LauncherState.canRun);
     else if (await archiveExists()) {
-      await uninstall();
-      _setState(LauncherState.canDownload);
+      _setState(LauncherState.canInstall);
     } else
       _setState(LauncherState.canDownload);
     return _currentState;
@@ -169,8 +179,16 @@ class Launcher {
       if (Platform.isMacOS) {
         _rewriteMacExecutablePermission(macExecutablePath!);
         _runMacExecutable(macExecutablePath!);
+        Sentry.captureEvent(new SentryEvent(
+            message: SentryMessage("Start Game"),
+            level: SentryLevel.info,
+            breadcrumbs: null));
       } else if (Platform.isWindows) {
         _runWindowsExecutable(windowsExecutablePath!);
+        Sentry.captureEvent(new SentryEvent(
+            message: SentryMessage("Start Game"),
+            level: SentryLevel.info,
+            breadcrumbs: null));
       } else
         throw new Exception(
             "Platform not supported: " + Platform.operatingSystem);
@@ -184,27 +202,26 @@ class Launcher {
     var dirPath = path.split('\\');
     var exeName = dirPath.removeLast();
     var result = Process.runSync(
-        'cd', [dirPath.join('\\'), '&&', 'start', exeName],
+        'cd', [dirPath.join('\\'), '&qw&', 'start', exeName],
         runInShell: true);
     print(result.stdout);
     print(result.stderr);
   }
 
-  void _rewriteMacExecutablePermission(String path) {
+  void _rewriteMacExecutablePermission(String p) {
     //Write permission to execute app
-    var innerExecutable =
-        Directory(path + _slash + "Contents" + _slash + "MacOS")
-            .listSync()
-            .first
-            .path;
-    var result = Process.runSync('chmod', ["+x", innerExecutable]);
+    // var innerExecutable =
+    //     Directory(path.join(p, "Contents", "MacOS")).listSync().first.path;
+    var result =
+        Process.runSync("xattr", ["-d", "-r", "com.apple.quarantine", p]);
+    // var result = Process.runSync('chmod', ["+x", innerExecutable]);
     stdout.write(result.stdout);
     stderr.write(result.stderr);
   }
 
   ///runPath should point to an app executable
   void _runMacExecutable(String path) {
-    print("RUNNING");
+    print("RUNNING: " + path);
     //Run
     var result = Process.runSync('open', [path]);
     stdout.write(result.stdout);
@@ -221,10 +238,10 @@ class Launcher {
 
   Future<String?> _findWindowsExecutable(String folderPath) async {
     var dir = Directory(folderPath).listSync(recursive: true).toList();
-    print(folderPath);
-    dir.forEach((element) {
-      print(element);
-    });
+    print("Finding windows executable in: " + folderPath);
+    // dir.forEach((element) {
+    //   print(element);
+    // });
     var exe = dir
         .map((e) => e.path)
         .firstWhere((e) => e.endsWith('Bridgestars.exe'), orElse: () => '');
@@ -243,10 +260,19 @@ class Launcher {
 
 //#region install
   Future install() async {
+    //TODO unzip in background thread
+    //start new thread
+    var t = Sentry.startTransaction(
+        "Install",
+        "from " +
+            localAppVersion.toString() +
+            " to " +
+            remoteAppVersion.toString());
     await _unzip(getArchivePath(), getExtractDir());
     await updateExecutablePaths();
     var f = new File(getArchivePath());
     if (f.existsSync()) f.deleteSync();
+    t.finish();
     return;
   }
 
@@ -255,20 +281,56 @@ class Launcher {
     print("EXTRACTING");
     // Use an InputFileStream to access the zip file without storing it in memory.
 
-    var bytes = new File(zipPath).readAsBytesSync();
-    var archive = ZipDecoder().decodeBytes(bytes);
-    for (var file in archive) {
-      var fileName = '$unzipPath/${file.name}';
-      if (file.isFile) {
-        var outFile = File(fileName);
-        //_tempImages.add(outFile.path);
-        if (!fileName.contains('__MACOSX')) {
-          outFile = await outFile.create(recursive: true);
-          await outFile.writeAsBytes(file.content);
+    try {
+      var start = DateTime.now();
+      if (Platform.isWindows) {
+        var s = DateTime.now();
+        var time = () {
+          print(DateTime.now().difference(s));
+          start = DateTime.now();
+        };
+
+        await Isolate.run(() {
+          var bytes = File(zipPath).readAsBytesSync();
+          var archive = ZipDecoder().decodeBytes(bytes);
+          time();
+          for (var file in archive) {
+            var fileName = '$unzipPath/${file.name}';
+            if (file.isFile) {
+              //start timer
+              //_tempImages.add(outFile.path);
+              if (fileName.contains('__MACOSX')) continue;
+              var st = DateTime.now();
+              var outFile = File(fileName);
+              //print("Extracting: " + fileName);
+              outFile.createSync(recursive: true);
+              outFile.writeAsBytesSync(file.content);
+              //print("Time: " + DateTime.now().difference(st).toString());
+            }
+          }
+        });
+        time();
+      } else if (Platform.isMacOS) {
+        // print([zipPath, "-d", path.join(unzipPath, "")]);
+        var result = await Process.run(
+            'unzip', ["-o", zipPath, "-d", path.join(unzipPath, "")]);
+        // print(result.stdout);
+        if (result.stderr.toString().isNotEmpty) {
+          throw new Exception(result.stderr.toString());
         }
-      }
+      } else
+        throw new Exception(
+            "Platform not supported: " + Platform.operatingSystem);
+
+      var end = DateTime.now();
+      var diff = end.difference(start).inMilliseconds;
+      print("Time to extract: " + diff.toString() + "ms");
+    } catch (e, stacktrace) {
+      print(e);
+      throw new Exception("Download was corrupted, please try again");
     }
-    await _removeArchive();
+
+    //await _removeArchive();
     return;
   }
 //#endregion install
@@ -284,6 +346,8 @@ class Launcher {
     await _removeArchive();
     await _removeGameDir();
     await _removeVersionFile();
+    localAppVersion = null;
+    remoteAppVersion = null;
   }
 
   Future _removeVersionFile() async {
@@ -306,11 +370,16 @@ class Launcher {
 
 //#region download
   Future download(void Function(DownloadInfo) callback) async {
-    if (remoteAppVersion != null) {
-      return _downloadFile(
-          remoteAppVersion!.getUrl(), getArchivePath(), callback);
-    }
-    throw new Exception("Current version not set");
+    if (remoteAppVersion == null)
+      throw new Exception("Current version not set");
+    var transaction = Sentry.startTransaction(
+        'Download',
+        "From " +
+            localAppVersion.toString() +
+            " to " +
+            remoteAppVersion.toString());
+    await _downloadFile(remoteAppVersion!.getUrl(), getArchivePath(), callback);
+    transaction.finish();
   }
 
   Future _downloadFile(
@@ -367,14 +436,20 @@ class Launcher {
   Future<Version> getRemoteAppVersion() async {
     var s = _currentState;
     _setState(LauncherState.connecting);
+    print("Getting remote app version");
     Version? v;
     Map<String, dynamic> data;
     try {
       var docName = Platform.isWindows ? "game-windows" : "game-mac";
-      var res = await http.get(Uri.parse(
+      var url = Uri.parse(
           'https://firestore.googleapis.com/v1/projects/bridge-fcee8/databases/(default)/documents/versions/' +
-              docName));
+              docName);
+      print(url);
+      var res = await http.get(url);
+
+      print("Fetched remote app version");
       data = json.decode(res.body) as Map<String, dynamic>;
+      print("Parsed remote app version");
     } catch (e) {
       throw new Exception(
         "Could not connect, please check your internet connection",

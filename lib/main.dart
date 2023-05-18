@@ -1,24 +1,22 @@
 import 'dart:io';
-import 'dart:ui';
 
-//import 'package:desktop_window/desktop_window.dart';
-import 'package:bridgestars_launcher/videoView.dart';
-import 'package:flutter/cupertino.dart';
+import 'bitsdojo_window/lib/bitsdojo_window.dart';
+import 'package:Bridgestars/videoView.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:bridgestars_launcher/launcher.dart';
-import 'package:dart_vlc/dart_vlc.dart';
-import 'package:flutter/widgets.dart';
 import 'package:window_manager/window_manager.dart';
 
+// import 'package:auto_updater/auto_updater.dart';
 //import 'package:liquid_progress_indicator/liquid_progress_indicator.dart';
 //import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:loading_indicator/loading_indicator.dart';
-import 'package:bitsdojo_window/bitsdojo_window.dart';
 
 import 'launcherView.dart';
 import 'videoView.dart';
+
+import 'package:media_kit/media_kit.dart';
+
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 late final navigatorKey = GlobalKey<NavigatorState>();
 GlobalKey<VideoViewState> videoKey = GlobalKey();
@@ -26,10 +24,23 @@ GlobalKey<VideoViewState> videoKey = GlobalKey();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
-  if (!kIsWeb &&
-      (Platform.isMacOS || Platform.isLinux || Platform.isWindows)) {}
 
-  await DartVLC.initialize();
+
+  WindowOptions windowOptions = WindowOptions(
+    size: Size(1620 / 2, 1080 / 2),
+    center: true,
+    backgroundColor: Colors.transparent,
+    skipTaskbar: false,
+    minimumSize: Size(1620 * 0.4, 1080 * 0.4),
+    maximumSize: Size(1620 / 1.5, 1080 / 1.5),
+    titleBarStyle: TitleBarStyle.hidden,
+  );
+
+  await windowManager.setAspectRatio(3.0 / 2.0);
+  windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
 
   if (Platform.isWindows)
     doWhenWindowReady(() {
@@ -41,22 +52,41 @@ void main() async {
       appWindow.show();
     });
 
-  await windowManager.ensureInitialized();
+  await SentryFlutter.init((options) {
+    options.dsn =
+        'https://0fa41ac90dce42e8af98c5b60d24ee7a@o4505084744433664.ingest.sentry.io/4505086445027328';
+    // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+    // We recommend adjusting this value in production.
+    options.tracesSampleRate = 1.0;
+  }, appRunner: init);
+}
 
-  WindowOptions windowOptions = WindowOptions(
-    size: Size(1620 / 2, 1080 / 2),
-    center: true,
-    backgroundColor: Colors.transparent,
-    skipTaskbar: false,
-    minimumSize: Size(1620 * 0.4, 1080 * 0.4),
-    maximumSize: Size(1620 / 1.5, 1080 / 1.5),
-    titleBarStyle: TitleBarStyle.hidden,
-  );
-  await windowManager.setAspectRatio(3.0 / 2.0);
-  windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.show();
-    await windowManager.focus();
-  });
+void init() async {
+  MediaKit.ensureInitialized();
+  if (!kIsWeb &&
+      (Platform.isMacOS || Platform.isLinux || Platform.isWindows)) {}
+
+  if (Platform.isWindows) {
+    Process.run("../Update.exe", [
+      "--update",
+      "https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher/win"
+    ]).then((x) {
+      print(x.stdout);
+      print(x.stderr);
+    }).catchError((e) {
+      print(e);
+      Sentry.captureException(
+          new Exception("Could not run update process: " + e.toString()),
+          stackTrace: StackTrace.current);
+    });
+  }
+  // else if(Platform.isMacOS){
+  //   String feedURL = 'https://bridgestars-static-host.s3.eu-north-1.amazonaws.com/launcher/mac/RELEASES.xml';
+  //   await autoUpdater.setFeedURL(feedURL);
+  //   await autoUpdater.checkForUpdates();
+  //   await autoUpdater.setScheduledCheckInterval(3600);
+  // }
+
 
   runApp(MaterialApp(
       navigatorKey: navigatorKey,
@@ -79,7 +109,7 @@ class _LauncherState extends State<LauncherApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Bridgestars LauncherAAA',
+        title: 'Bridgestars Launcher',
         theme: defaultTheme,
         // theme: ThemeData(
         //   primarySwatch: Colors.blue,

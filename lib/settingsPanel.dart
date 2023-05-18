@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:bridgestars_launcher/dialogs.dart';
+import 'package:Bridgestars/dialogs.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:settings_ui/settings_ui.dart';
@@ -81,7 +81,8 @@ drawSettingsPanel(
                     ![
                       LauncherState.canUpdate,
                       LauncherState.canRun,
-                      LauncherState.canDownload
+                      LauncherState.canDownload,
+                      LauncherState.canInstall
                     ].contains(launcher?.getState())
                         ? showAlertDialog(
                             "Download in progress",

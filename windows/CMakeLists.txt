@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 project(bridgestars_launcher LANGUAGES CXX)
 
-set(BINARY_NAME "bridgestars_launcher")
+set(BINARY_NAME "Bridgestars")
 
 cmake_policy(SET CMP0063 NEW)
 

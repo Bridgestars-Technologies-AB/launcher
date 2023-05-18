@@ -1,10 +1,9 @@
 import 'dart:io';
 
-import 'package:bridgestars_launcher/launcher.dart';
+import 'package:Bridgestars/launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 import 'package:loading_indicator/loading_indicator.dart';
-import 'package:settings_ui/settings_ui.dart';
 import 'launcherView.dart';
 import 'main.dart';
 
@@ -62,7 +61,7 @@ Function showLoadingDialog(String text) {
 showOkDialog(
     String title, String text, String btnText, Function() closeCallback) {
   if (navigatorKey.currentContext == null)
-    throw new Exception("Something not set up right");
+    throw new Exception("Something is not set up right");
 
   var context = navigatorKey.currentContext!;
 
@@ -124,7 +123,7 @@ showOkDialog(
 
 showAppInfoDialog(Version? v, Function()? closeCallback) {
   if (navigatorKey.currentContext == null)
-    throw new Exception("Something not set up right");
+    throw new Exception("Something is not set up right");
 
   var context = navigatorKey.currentContext!;
 
@@ -207,7 +206,7 @@ showAlertDialog(String title, String message, List<Text> btnTexts,
 
 // show the dialog
   if (navigatorKey.currentContext == null)
-    throw new Exception("Something not set up right");
+    throw new Exception("Something is not set up right");
   showDialog(
     context: navigatorKey.currentContext!,
     builder: (BuildContext context) {
@@ -229,19 +228,20 @@ showAlertDialog(String title, String message, List<Text> btnTexts,
   );
 }
 
-Future showErrorRetryDialog(
+Future showErrorDialog(
     {required LauncherView widget,
     required String message,
-    String title = "Ops, Something went wrong"}) async {
+    String title = "Ops, Something went wrong",
+    String btn_text = "OK"}) async {
   if (widget.showUI) {
     return await FlutterPlatformAlert.showCustomAlert(
-        positiveButtonTitle: "Try again",
+        positiveButtonTitle: "OK",
         windowTitle: title,
         text: message,
         iconStyle: IconStyle.error);
   } else
-    return Future.delayed(Duration(milliseconds: 50)).then((v) =>
-        showErrorRetryDialog(message: message, title: title, widget: widget));
+    return Future.delayed(Duration(milliseconds: 50)).then(
+        (v) => showErrorDialog(message: message, title: title, widget: widget));
 }
 
 Future showCustomDialog(

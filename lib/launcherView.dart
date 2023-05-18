@@ -2,18 +2,10 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:bridgestars_launcher/main.dart';
-import 'package:bridgestars_launcher/settingsPanel.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:Bridgestars/settingsPanel.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_platform_alert/flutter_platform_alert.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:loading_indicator/loading_indicator.dart';
-import 'package:settings_ui/settings_ui.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'launcher.dart';
 import 'videoView.dart';
@@ -69,8 +61,8 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
       }
       //
     } catch (e) {
-      await showErrorRetryDialog(
-          widget: widget, message: getExceptionMessage(e));
+      await showErrorDialog(
+          widget: widget, message: getExceptionMessage(e), btn_text: "Retry");
       _init();
     }
   }
@@ -88,32 +80,36 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
           _handleBtnPress();
           return;
         } else {
-          await widget.videoViewKey.currentState?.playOutroAndHide();
-          await launcher?.handleBtnPress();
-          await Future.delayed(Duration(seconds: 1));
-          await launcher?.waitForGameClose();
-          await widget.videoViewKey.currentState?.showWithBackground();
+          await widget.videoViewKey.currentState?.playOutroAndHide(
+              () => launcher?.handleBtnPress(), setLauncherState);
+          if(Platform.isWindows) await widget.videoViewKey.currentState?.showWithBackground();
+          // await Future.delayed(Duration(seconds: 1));
+          // // await launcher?.waitForGameClose();
+          // await widget.videoViewKey.currentState?.showWithBackground();
         }
       } else
-        launcher?.handleBtnPress();
-    } catch (e) {
-      await showErrorRetryDialog(
-          message: getExceptionMessage(e), widget: widget);
-      _handleBtnPress();
+        await launcher?.handleBtnPress();
+    } catch (e, stacktrace) {
+      await showErrorDialog(message: getExceptionMessage(e), widget: widget);
+      print("ERROR: " + e.toString());
+      print("ERROR: " + stacktrace.toString());
+      await launcher?.refreshAppVersion();
+      await launcher?.updateState();
     }
   }
 
   String getExceptionMessage(e) =>
       e.toString().substring(e.toString().indexOf(':') + 1);
 
-  void setLauncherState(LauncherState s, DownloadInfo? p) => setState(() {
+  void setLauncherState(LauncherState s, {DownloadInfo? p}) => setState(() {
         launcherState = s;
         launcherStateString = getLauncherStateString(s, launcher);
         progress = p;
         showBtn = [
           LauncherState.canRun,
           LauncherState.canDownload,
-          LauncherState.canUpdate
+          LauncherState.canUpdate,
+          LauncherState.canInstall
         ].contains(s);
       });
 
@@ -134,7 +130,7 @@ class _LauncherViewState extends State<LauncherView> with WindowListener {
             child: Align(
               child: Text(
                 launcher!.localAppVersion!.getDisplayValue(),
-                style: TextStyle(color: Colors.white60, fontSize: width / 80),
+                style: TextStyle(color: Colors.white60, fontSize: width / 60),
               ),
               alignment: Alignment.bottomLeft,
             )),
@@ -273,6 +269,8 @@ String getLauncherStateString(LauncherState s, Launcher? launcher) {
   switch (s) {
     case LauncherState.canDownload:
       return " DOWNLOAD ";
+    case LauncherState.canInstall:
+      return " INSTALL ";
     case LauncherState.canUpdate:
       return " UPDATE ";
     case LauncherState.canRun:
