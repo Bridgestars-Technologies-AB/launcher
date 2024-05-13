@@ -41,3 +41,6 @@ Launcher can be downloaded and tested here [https://bridgestars.net/download](ht
 
 ### Disclaimer: 
 Game download is just a normal zip file download + extraction, which is not resumable and does not work very well for large games. Keep this in mind if you want to use the code for your own game. 
+
+### PS
+If you use this repository, I'd like to hear about it!
