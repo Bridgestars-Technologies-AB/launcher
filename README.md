@@ -6,7 +6,7 @@ A launcher for the Bridgestars unity application.
 - Launcher packaging and installation using windows/mac installer,
   - ask to place shortcut on desktop
   - ask to move itself to /apps folder (mac)
-- Launcher updates using squirrel
+- Launcher updates using squirrel/sparkle
 
 
 Launcher can be downloaded and tested here [https://bridgestars.net/download](https://bridgestars.net/download)
