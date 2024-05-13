@@ -3,7 +3,9 @@
 A launcher for the Bridgestars unity application.
 - Game installation and updates
 - Windows and MacOS compatible
-- Launcher packaging and installation using windows/mac installer
+- Launcher packaging and installation using windows/mac installer,
+  - ask to place shortcut on desktop
+  - ask to move itself to /apps folder (mac)
 - Launcher updates using squirrel
 
 
